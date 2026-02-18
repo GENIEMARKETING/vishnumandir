@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
     // Revalidation
     REVALIDATION_SECRET: process.env.REVALIDATION_SECRET,
     STRAPI_WEBHOOK_SECRET: process.env.STRAPI_WEBHOOK_SECRET,
+    // Medusa Commerce configuration
+    NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_MEDUSA_API_URL: process.env.NEXT_PUBLIC_MEDUSA_API_URL,
   },
   images: {
     remotePatterns: [
@@ -34,6 +37,11 @@ const nextConfig: NextConfig = {
         hostname: "localhost",
         port: "1337",
         pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com",
+        pathname: "/**",
       },
     ],
   },

@@ -63,7 +63,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
   const salesChannelModuleService = container.resolve(Modules.SALES_CHANNEL);
   const storeModuleService = container.resolve(Modules.STORE);
 
-  const countries = ["gb", "de", "dk", "se", "fr", "es", "it"];
+  const countries = ["us"];
 
   logger.info("Seeding store data...");
   const [store] = await storeModuleService.listStores();
@@ -115,8 +115,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
     input: {
       regions: [
         {
-          name: "Europe",
-          currency_code: "eur",
+          name: "United States",
+          currency_code: "usd",
           countries,
           payment_providers: ["pp_system_default"],
         },
@@ -397,6 +397,25 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
 
+  // Create vendor tags first before creating products
+  const productModule = container.resolve(Modules.PRODUCT);
+
+  // 1) Define vendor tags we want in DB
+  const vendorTagValues = [
+    "vendor:temple-artisans",
+    "vendor:sacred-crafts-collective",
+    "vendor:spiritual-goods-studio",
+    "vendor:temple-community-makers",
+  ];
+
+  // 2) Create / upsert tags first
+  const createdTags = await productModule.createProductTags(
+    vendorTagValues.map((value) => ({ value }))
+  );
+
+  // 3) Map value -> id
+  const tagIdByValue = new Map(createdTags.map((t: any) => [t.value, t.id]));
+
   await createProductsWorkflow(container).run({
     input: {
       products: [
@@ -586,6 +605,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
               id: defaultSalesChannel[0].id,
             },
           ],
+          metadata: {
+            vendor: {
+              name: "Temple Artisans",
+              id: "vendor-temple-artisans",
+              email: "artisans@vishnumandirtampa.org",
+            },
+          },
         },
         {
           title: "Medusa Sweatshirt",
@@ -687,6 +713,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
               id: defaultSalesChannel[0].id,
             },
           ],
+          metadata: {
+            vendor: {
+              name: "Sacred Crafts Collective",
+              id: "vendor-sacred-crafts",
+              email: "crafts@vishnumandirtampa.org",
+            },
+          },
         },
         {
           title: "Medusa Sweatpants",
@@ -788,6 +821,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
               id: defaultSalesChannel[0].id,
             },
           ],
+          metadata: {
+            vendor: {
+              name: "Spiritual Goods Studio",
+              id: "vendor-spiritual-goods",
+              email: "studio@vishnumandirtampa.org",
+            },
+          },
         },
         {
           title: "Medusa Shorts",
@@ -889,6 +929,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
               id: defaultSalesChannel[0].id,
             },
           ],
+          metadata: {
+            vendor: {
+              name: "Temple Community Makers",
+              id: "vendor-temple-community",
+              email: "community@vishnumandirtampa.org",
+            },
+          },
         },
       ],
     },

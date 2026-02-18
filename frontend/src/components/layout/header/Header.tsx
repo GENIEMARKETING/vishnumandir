@@ -134,6 +134,12 @@ export function Header() {
               items={menuItems.forms}
               href="/forms"
             />
+            <Link
+              href="/shop"
+              className="text-text-primary hover:text-primary font-medium transition-colors px-3 py-2 rounded-lg hover:bg-primary/5"
+            >
+              Shop
+            </Link>
             <DropdownMenu
               label="Support"
               items={menuItems.support}
@@ -314,6 +320,15 @@ export function Header() {
                     </Link>
                   ))}
                 </div>
+              </div>
+              <div>
+                <Link
+                  href="/shop"
+                  className="text-text-primary hover:text-primary font-medium transition-colors block mb-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Shop
+                </Link>
               </div>
               <div>
                 <Link
