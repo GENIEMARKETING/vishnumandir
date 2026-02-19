@@ -6,26 +6,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+- fix(cart): Fixed "useCart must be used within a CartProvider" runtime error
+  - `frontend/src/app/(site)/layout.tsx` - Added CartProvider wrapper to SiteLayout to properly provide cart context to all site pages
+  - CartIcon component in Header now renders without context errors
+  - Cart functionality fully accessible throughout the application
+
 ### Added
-- feat(vendors): Added vendor metadata field to Medusa products
-  - `commerce/src/api/store/products-with-vendors/route.ts` - Updated endpoint to extract vendor from product metadata (primary) with tag-based fallback for backward compatibility
-  - `commerce/src/scripts/seed.ts` - Added vendor metadata to seeded products (temple-store, sacred-crafts, spiritual-goods, temple-community vendors)
-  - Products now store vendor info in `metadata.vendor_slug` instead of only in tags
-  - `/store/products-with-vendors` API endpoint now returns `{ vendor: { slug, name } }` for each product extracted from metadata
+- feat(vendors): Implemented vendor attribution using Medusa product tags (vendor:<slug> format)
+  - `commerce/src/scripts/seed.ts` - Updated seed script to create sample products with proper options/variants and vendor tags (vendor:temple-store, vendor:sacred-crafts, vendor:spiritual-goods, vendor:temple-community)
+  - Products seeded with tags format for easy admin management in Medusa Admin UI
+  - Tags are visible and editable directly on product pages in Medusa Admin
   
-- feat(webhooks): Implemented Medusa webhook-triggered ISR revalidation for instant product updates
-  - `commerce/src/subscribers/product-changes.ts` - NEW Medusa subscriber listening to product.created, product.updated, product.deleted events; calls frontend webhook with HMAC-SHA256 signature verification
-  - `frontend/src/app/api/webhooks/medusa/route.ts` - NEW webhook handler that verifies signatures and revalidates shop pages (/shop, /shop/vendors, /shop/vendor/*)
-  - `commerce/.env` - Added MEDUSA_WEBHOOK_SECRET for webhook signing
-  - `frontend/.env.local` - Added MEDUSA_WEBHOOK_SECRET for webhook verification
-  - Products with vendor tags now appear on frontend instantly when added/updated in Medusa Admin (previously 5-minute ISR delay)
-  - Webhook includes vendor tag information for targeted revalidation of affected vendor pages
+- feat(vendors): Extended products-with-vendors API to extract vendor info from tags
+  - `commerce/src/api/store/products-with-vendors/route.ts` - Extracts vendor slug from product tags, converts to display name (e.g., vendor:temple-store → Temple Store)
+  - Returns `{ vendor: { slug, name } }` for each product extracted from tags
+  - Maintains backward compatibility: tries metadata.vendor_slug first, falls back to tags
+
+- feat(frontend): Frontend displays vendor attribution and vendor pages
+  - `frontend/src/components/shared/ProductCard.tsx` - Displays "Sold by: [Vendor Name]" on product cards
+  - `frontend/src/components/shared/VendorAttribution.tsx` - Shows vendor with clickable link to vendor page
+  - `frontend/src/app/(site)/shop/vendor/[slug]/page.tsx` - Vendor-specific storefront showing all products from that vendor
+  - Frontend successfully filters products by vendor and displays vendor name
 
 ### Changed
-- refactor(frontend): Updated ProductCard and VendorAttribution to use vendor metadata
-  - `frontend/src/components/shared/ProductCard.tsx` - Now passes `product.vendor` prop (from metadata) to VendorAttribution instead of tags
-  - `frontend/src/components/shared/VendorAttribution.tsx` - Updated logic to prefer vendor prop (from metadata) over tags-based extraction; maintains backward compatibility with tag system
-  - "Sold by: [Vendor Name]" now displays consistently based on product metadata
+- refactor(backend): Medusa products now include options and variants for proper e-commerce compatibility
+  - Products created with Size, Color, Type, Frame options and corresponding variants
+  - Enables future functionality like variant-specific pricing and inventory tracking
+  
+- docs(vendors): Updated system to use tag-based vendor attribution (simpler admin UX)
+  - Vendors managed as product tags, not as separate entities
+  - Admins add tags in Medusa Admin UI directly on product edit page
+  - No vendor dashboards or vendor self-service management
+  
+### Fixed
+- fix(vendors): Seed script now properly creates products with required options/variants
+  - Medusa requires all products to have at least one option and variant
+  - Updated seed to define product options (Size, Color, Type, Frame) and variants
+  
+- fix(vendors): Database properly links vendor tags to products
+  - Created product_tag entries with vendor slugs
+  - Created product_tags junction table entries linking products to tags
+  - Verified tags are retrieved correctly by backend API endpoint
 
 ### Fixed
 - fix(shop): Fixed 400 Bad Request error on /shop/vendors page
