@@ -16,6 +16,7 @@ interface VendorAttributionProps {
 /**
  * VendorAttribution component - Displays vendor/store attribution for a product.
  * Shows "Sold by: [Vendor Name]" with link to vendor storefront.
+ * Prefers vendor metadata over deprecated tags system.
  * @param {VendorAttributionProps} props - Component props
  * @returns {JSX.Element} The rendered vendor attribution
  */
@@ -26,20 +27,25 @@ export function VendorAttribution({
   className = "",
   onClick,
 }: VendorAttributionProps) {
-  // Get vendor slug from tags (preferred) or from vendor prop (deprecated)
-  let vendorSlug = getVendorSlugFromTags(tags) || (vendor?.name ? slugifyVendorName(vendor.name) : null);
+  // Prefer vendor prop (from metadata) over tags (fallback for backward compatibility)
+  let vendorSlug = vendor?.slug || (tags ? getVendorSlugFromTags(tags) : null);
+  let vendorName = vendor?.name || "Temple Store";
   
-  // Get display name from slug or vendor prop
-  let vendorName = "Temple Store";
-  if (vendorSlug) {
-    vendorName = getVendorDisplayNameFromSlug(vendorSlug);
-  } else if (vendor?.name) {
-    vendorName = vendor.name;
-  }
-
-  // Always ensure we have a slug (fallback to slugifying the vendor name)
-  if (!vendorSlug) {
-    vendorSlug = slugifyVendorName(vendorName);
+  // Fallback logic if neither vendor prop nor tags provide info
+  if (!vendorSlug && !vendor) {
+    if (tags) {
+      vendorSlug = getVendorSlugFromTags(tags);
+      if (vendorSlug) {
+        vendorName = getVendorDisplayNameFromSlug(vendorSlug);
+      } else {
+        vendorSlug = slugifyVendorName(vendorName);
+      }
+    } else {
+      vendorSlug = slugifyVendorName(vendorName);
+    }
+  } else if (!vendorSlug && vendor?.name) {
+    // If we have vendor name but no slug, generate one
+    vendorSlug = slugifyVendorName(vendor.name);
   }
 
   const handleClick = (e: React.MouseEvent) => {

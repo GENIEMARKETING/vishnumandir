@@ -112,6 +112,7 @@ export interface VendorInfo {
  * Vendor information stored in product metadata.
  */
 export interface ProductVendor {
+  slug?: string;
   name: string;
   id?: string;
   email?: string;

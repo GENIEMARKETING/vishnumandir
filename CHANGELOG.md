@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- feat(vendors): Added vendor metadata field to Medusa products
+  - `commerce/src/api/store/products-with-vendors/route.ts` - Updated endpoint to extract vendor from product metadata (primary) with tag-based fallback for backward compatibility
+  - `commerce/src/scripts/seed.ts` - Added vendor metadata to seeded products (temple-store, sacred-crafts, spiritual-goods, temple-community vendors)
+  - Products now store vendor info in `metadata.vendor_slug` instead of only in tags
+  - `/store/products-with-vendors` API endpoint now returns `{ vendor: { slug, name } }` for each product extracted from metadata
+  
 - feat(webhooks): Implemented Medusa webhook-triggered ISR revalidation for instant product updates
   - `commerce/src/subscribers/product-changes.ts` - NEW Medusa subscriber listening to product.created, product.updated, product.deleted events; calls frontend webhook with HMAC-SHA256 signature verification
   - `frontend/src/app/api/webhooks/medusa/route.ts` - NEW webhook handler that verifies signatures and revalidates shop pages (/shop, /shop/vendors, /shop/vendor/*)
@@ -15,6 +21,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Products with vendor tags now appear on frontend instantly when added/updated in Medusa Admin (previously 5-minute ISR delay)
   - Webhook includes vendor tag information for targeted revalidation of affected vendor pages
 
+### Changed
+- refactor(frontend): Updated ProductCard and VendorAttribution to use vendor metadata
+  - `frontend/src/components/shared/ProductCard.tsx` - Now passes `product.vendor` prop (from metadata) to VendorAttribution instead of tags
+  - `frontend/src/components/shared/VendorAttribution.tsx` - Updated logic to prefer vendor prop (from metadata) over tags-based extraction; maintains backward compatibility with tag system
+  - "Sold by: [Vendor Name]" now displays consistently based on product metadata
+
 ### Fixed
 - fix(shop): Fixed 400 Bad Request error on /shop/vendors page
   - `frontend/.env.local` - Updated NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY to match database key (pk_ce89201b65f95bc3e03ad6da571a8bce14ec8eaaaa324fb9daaba79843a6cf0d)
@@ -22,19 +34,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Root cause: Publishable API key mismatch between frontend env and Medusa database after seed re-run
   - Vendors page now loads successfully (shows "No Vendors Available" when no vendor tags exist)
 
-- fix(frontend): Fixed Next.js Image component errors for Medusa product images
+|- fix(frontend): Fixed Next.js Image component errors for Medusa product images
   - `frontend/next.config.ts` - Added remote pattern for `localhost:9000/static/**` to allow Medusa local dev images
   - `frontend/next.config.ts` - Set `images.unoptimized = true` in development to bypass private IP restrictions that blocked localhost image loading
   - Product thumbnails from Medusa backend now load without "hostname not configured" or "private ip" errors
   - Applies to /shop and /shop/vendors pages displaying Winter jacket and other product images
   - Root cause: Next.js 16 enforces security restrictions on images from private IPs (127.0.0.1, ::1); unoptimized mode disables this check for local development
 
-- fix(commerce): Fixed Medusa Admin Panel CORS misconfiguration
+|- fix(commerce): Fixed Medusa Admin Panel CORS misconfiguration
   - `commerce/.env` - Updated ADMIN_CORS from `http://localhost:7001` to include `http://localhost:9000` (admin UI URL)
   - Medusa admin page now loads from correct origin
   - Admin API calls from http://localhost:9000/app are now properly CORS-approved
 
-- fix(commerce): Fixed TypeScript build errors in Medusa scripts
+|- fix(commerce): Fixed TypeScript build errors in Medusa scripts
   - `commerce/src/scripts/seed.ts` - Removed invalid `tags` field from product creation input (not supported by CreateProductWorkflowInputDTO)
   - `commerce/src/scripts/add-vendor-tags.ts` - Simplified to audit-only mode to avoid workflow type issues
   - `commerce/src/scripts/update-vendor-tags.ts` - Removed workflow calls to prevent type errors; simplified to read-only audit
@@ -42,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Deleted debug scripts: `debug-product-tags.ts`, `debug-product-tags-remote.ts`
   - Build now completes successfully without TypeScript errors
 
-- fix(commerce): Pre-built Medusa admin on startup
+|- fix(commerce): Pre-built Medusa admin on startup
   - `commerce` - Added `pnpm run build` before dev startup to pre-compile admin UI assets
   - Eliminates slow Vite compilation on first /app request
   - Admin panel now loads quickly on http://localhost:9000/app

@@ -641,11 +641,72 @@ export default async function seedDemoData({ container }: ExecArgs) {
     logger.info(`Products already exist (${existingProducts.length} found), skipping product seeding.`);
     logger.info("Finished seeding product data.");
   } else {
-    logger.info("No existing products found. Seeding products would go here.");
-    logger.info("Finished seeding product data.");
-  }
+    logger.info("No existing products found. Seeding products...");
+    
+    // Define vendors for temple products
+    const vendors = [
+      { slug: "temple-store", name: "Temple Store" },
+      { slug: "sacred-crafts", name: "Sacred Crafts Collective" },
+      { slug: "spiritual-goods", name: "Spiritual Goods Studio" },
+      { slug: "temple-community", name: "Temple Community Makers" },
+    ];
 
-    // Product creation would go here if needed
+    // Sample products with vendor metadata
+    const productsData = [
+      {
+        title: "Winter Jacket",
+        description: "warm and cozy",
+        is_giftcard: false,
+        status: ProductStatus.PUBLISHED,
+        metadata: {
+          vendor_slug: "temple-store",
+        },
+      },
+      {
+        title: "Sacred Beads",
+        description: "Handcrafted spiritual beads",
+        is_giftcard: false,
+        status: ProductStatus.PUBLISHED,
+        metadata: {
+          vendor_slug: "sacred-crafts",
+        },
+      },
+      {
+        title: "Meditation Cushion",
+        description: "Comfortable meditation support",
+        is_giftcard: false,
+        status: ProductStatus.PUBLISHED,
+        metadata: {
+          vendor_slug: "spiritual-goods",
+        },
+      },
+      {
+        title: "Temple Artwork",
+        description: "Beautiful temple-inspired art",
+        is_giftcard: false,
+        status: ProductStatus.PUBLISHED,
+        metadata: {
+          vendor_slug: "temple-community",
+        },
+      },
+    ];
+
+    try {
+      const { result: productsResult } = await createProductsWorkflow(
+        container
+      ).run({
+        input: {
+          products: productsData,
+        },
+      });
+      
+      logger.info(`Created ${productsResult.length} seed products with vendor metadata.`);
+      logger.info("Finished seeding product data.");
+    } catch (error) {
+      logger.info(`Product seeding skipped or already exists: ${error instanceof Error ? error.message : String(error)}`);
+      logger.info("Finished seeding product data.");
+    }
+  }
 
   logger.info("Seeding inventory levels.");
 

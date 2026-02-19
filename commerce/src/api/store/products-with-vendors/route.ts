@@ -12,24 +12,32 @@ interface ProductWithVendor {
 }
 
 /**
- * Extract vendor information from product tags.
- * Tags are in format: "vendor:<slug>"
- * @param tags - Array of tag objects with value property
- * @returns Vendor info with slug and name, or null if no vendor tag found
+ * Extract vendor slug from product metadata or tags (for backward compatibility).
+ * Metadata format: metadata.vendor_slug = "temple-store"
+ * Tags format (fallback): "vendor:<slug>"
+ * @param metadata - Product metadata object
+ * @param tags - Array of tag objects with value property (fallback)
+ * @returns Vendor info with slug and name, or null if no vendor found
  */
-function extractVendorFromTags(
+function extractVendorFromProduct(
+  metadata: Record<string, any> | undefined | null,
   tags: Array<{ value: string }> | undefined | null
 ): VendorInfo | null {
-  if (!tags || !Array.isArray(tags)) {
-    return null;
+  let slug: string | null = null;
+
+  // Try to get vendor from metadata first
+  if (metadata && typeof metadata === 'object' && 'vendor_slug' in metadata) {
+    slug = metadata.vendor_slug as string;
   }
 
-  const vendorTag = tags.find((tag) => tag.value?.startsWith("vendor:"));
-  if (!vendorTag) {
-    return null;
+  // Fallback to tag-based system for backward compatibility
+  if (!slug && tags && Array.isArray(tags)) {
+    const vendorTag = tags.find((tag) => tag.value?.startsWith("vendor:"));
+    if (vendorTag) {
+      slug = vendorTag.value.replace("vendor:", "");
+    }
   }
 
-  const slug = vendorTag.value.replace("vendor:", "");
   if (!slug) {
     return null;
   }
@@ -45,7 +53,7 @@ function extractVendorFromTags(
 
 /**
  * Custom Store API endpoint that returns products with vendor information.
- * Queries products with tags and extracts vendor data from tags.
+ * Vendor data is fetched from product metadata (primary) or tags (fallback).
  * Format: GET /store/products-with-vendors
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -53,7 +61,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // Get the product module from the container
     const productModule = req.scope.resolve(Modules.PRODUCT);
 
-    // Query all products with tags relation
+    // Query all products with tags and metadata relations
     const [products, count] = await productModule.listAndCountProducts(
       {},
       { relations: ["tags"] }
@@ -63,7 +71,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const productsWithVendors: ProductWithVendor[] = products.map(
       (product: any) => ({
         ...product,
-        vendor: extractVendorFromTags(product.tags),
+        vendor: extractVendorFromProduct(product.metadata, product.tags),
       })
     );
 

@@ -75,7 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Vendor Attribution */}
           <VendorAttribution 
-            tags={product.tags}
+            vendor={product.vendor}
             variant="card" 
             className="mb-3"
             onClick={handleVendorClick}
