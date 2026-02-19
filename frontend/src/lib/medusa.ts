@@ -70,7 +70,9 @@ export async function fetchProducts(): Promise<
     });
 
     if (!res.ok) {
+      const body = await res.text();
       console.error(`[fetchProducts] HTTP ${res.status}: ${res.statusText}`);
+      console.error("[fetchProducts] Response body:", body);
       return {
         ok: false,
         error: `Failed to fetch products: ${res.status} ${res.statusText}`,
@@ -116,6 +118,8 @@ export async function fetchProductsWithVendors(): Promise<
       };
     }
 
+    console.log("[fetchProductsWithVendors] Using publishable key:", config.publishableKey.substring(0, 20) + "...");
+
     const url = `${config.apiUrl}/store/products-with-vendors`;
 
     const res = await fetch(url, {
@@ -126,7 +130,9 @@ export async function fetchProductsWithVendors(): Promise<
     });
 
     if (!res.ok) {
+      const body = await res.text();
       console.error(`[fetchProductsWithVendors] HTTP ${res.status}: ${res.statusText}`);
+      console.error("[fetchProductsWithVendors] Response body:", body);
       return {
         ok: false,
         error: `Failed to fetch products with vendors: ${res.status} ${res.statusText}`,

@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_MEDUSA_API_URL: process.env.NEXT_PUBLIC_MEDUSA_API_URL,
   },
   images: {
+    // Allow unoptimized images in development to bypass private IP restrictions
+    unoptimized: process.env.NODE_ENV === "development",
     remotePatterns: [
       {
         protocol: "https",
@@ -37,6 +39,12 @@ const nextConfig: NextConfig = {
         hostname: "localhost",
         port: "1337",
         pathname: "/uploads/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/static/**",
       },
       {
         protocol: "https",

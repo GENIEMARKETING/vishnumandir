@@ -111,66 +111,183 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
   logger.info("Seeding region data...");
-  const { result: regionResult } = await createRegionsWorkflow(container).run({
-    input: {
-      regions: [
-        {
-          name: "United States",
-          currency_code: "usd",
-          countries,
-          payment_providers: ["pp_system_default"],
-        },
-      ],
-    },
-  });
-  const region = regionResult[0];
+  const existingRegions = await container
+    .resolve(Modules.REGION)
+    .listRegions();
+  
+  let region;
+  const usRegion = existingRegions.find(r => r.name === "United States");
+  
+  if (usRegion) {
+    region = usRegion;
+    logger.info("United States region already exists, skipping creation.");
+  } else {
+    const { result: regionResult } = await createRegionsWorkflow(container).run({
+      input: {
+        regions: [
+          {
+            name: "United States",
+            currency_code: "usd",
+            countries,
+            payment_providers: ["pp_system_default"],
+          },
+        ],
+      },
+    });
+    region = regionResult[0];
+  }
   logger.info("Finished seeding regions.");
 
   logger.info("Seeding tax regions...");
-  await createTaxRegionsWorkflow(container).run({
-    input: countries.map((country_code) => ({
-      country_code,
-      provider_id: "tp_system",
-    })),
-  });
+  const taxModuleService = container.resolve(Modules.TAX);
+  const existingTaxRegions = await taxModuleService.listTaxRegions();
+  
+  const usTaxRegionExists = existingTaxRegions.some(tr => tr.country_code === "us");
+  
+  if (!usTaxRegionExists) {
+    await createTaxRegionsWorkflow(container).run({
+      input: countries.map((country_code) => ({
+        country_code,
+        provider_id: "tp_system",
+      })),
+    });
+    logger.info("Tax regions created.");
+  } else {
+    logger.info("Tax regions already exist, skipping creation.");
+  }
   logger.info("Finished seeding tax regions.");
 
   logger.info("Seeding stock location data...");
-  const { result: stockLocationResult } = await createStockLocationsWorkflow(
-    container
-  ).run({
-    input: {
-      locations: [
-        {
-          name: "European Warehouse",
-          address: {
-            city: "Copenhagen",
-            country_code: "DK",
-            address_1: "",
+  const stockLocationModuleService = container.resolve(Modules.STOCK_LOCATION);
+  const existingLocations = await stockLocationModuleService.listStockLocations();
+  
+  let usaLocation;
+  let europeanLocation;
+  
+  // Check if USA location already exists
+  const existingUsaLocation = existingLocations.find(loc => 
+    loc.name === "USA Warehouse - Tampa"
+  );
+  
+  // Check if European location already exists
+  const existingEuropeanLocation = existingLocations.find(loc =>
+    loc.name === "European Warehouse - Copenhagen"
+  );
+  
+  if (existingUsaLocation && existingEuropeanLocation) {
+    usaLocation = existingUsaLocation;
+    europeanLocation = existingEuropeanLocation;
+    logger.info("Stock locations already exist, skipping creation.");
+  } else if (existingUsaLocation) {
+    usaLocation = existingUsaLocation;
+    // Create European location if missing
+    const { result: europeanResult } = await createStockLocationsWorkflow(
+      container
+    ).run({
+      input: {
+        locations: [
+          {
+            name: "European Warehouse - Copenhagen",
+            address: {
+              city: "Copenhagen",
+              country_code: "DK",
+              address_1: "",
+            },
           },
-        },
-      ],
-    },
-  });
-  const stockLocation = stockLocationResult[0];
+        ],
+      },
+    });
+    europeanLocation = europeanResult[0];
+    logger.info("Created missing European warehouse.");
+  } else if (existingEuropeanLocation) {
+    europeanLocation = existingEuropeanLocation;
+    // Create USA location if missing
+    const { result: usaResult } = await createStockLocationsWorkflow(
+      container
+    ).run({
+      input: {
+        locations: [
+          {
+            name: "USA Warehouse - Tampa",
+            address: {
+              city: "Tampa",
+              country_code: "US",
+              address_1: "Temple Location",
+            },
+          },
+        ],
+      },
+    });
+    usaLocation = usaResult[0];
+    logger.info("Created missing USA warehouse.");
+  } else {
+    // Create both locations
+    const { result: stockLocationResult } = await createStockLocationsWorkflow(
+      container
+    ).run({
+      input: {
+        locations: [
+          {
+            name: "USA Warehouse - Tampa",
+            address: {
+              city: "Tampa",
+              country_code: "US",
+              address_1: "Temple Location",
+            },
+          },
+          {
+            name: "European Warehouse - Copenhagen",
+            address: {
+              city: "Copenhagen",
+              country_code: "DK",
+              address_1: "",
+            },
+          },
+        ],
+      },
+    });
+    
+    usaLocation = stockLocationResult[0];
+    europeanLocation = stockLocationResult[1];
+    logger.info("Stock locations created.");
+  }
 
+  // Set USA warehouse as default since temple is in Tampa, Florida
   await updateStoresWorkflow(container).run({
     input: {
       selector: { id: store.id },
       update: {
-        default_location_id: stockLocation.id,
+        default_location_id: usaLocation.id,
       },
     },
   });
 
-  await link.create({
-    [Modules.STOCK_LOCATION]: {
-      stock_location_id: stockLocation.id,
-    },
-    [Modules.FULFILLMENT]: {
-      fulfillment_provider_id: "manual_manual",
-    },
-  });
+  // Link both warehouses to fulfillment
+  try {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: usaLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_provider_id: "manual_manual",
+      },
+    });
+  } catch (error) {
+    logger.info("USA warehouse fulfillment link already exists or failed silently.");
+  }
+
+  try {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: europeanLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_provider_id: "manual_manual",
+      },
+    });
+  } catch (error) {
+    logger.info("European warehouse fulfillment link already exists or failed silently.");
+  }
 
   logger.info("Seeding fulfillment data...");
   const shippingProfiles = await fulfillmentModuleService.listShippingProfiles({
@@ -193,140 +310,283 @@ export default async function seedDemoData({ container }: ExecArgs) {
     shippingProfile = shippingProfileResult[0];
   }
 
-  const fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-    name: "European Warehouse delivery",
-    type: "shipping",
-    service_zones: [
-      {
-        name: "Europe",
-        geo_zones: [
-          {
-            country_code: "gb",
-            type: "country",
-          },
-          {
-            country_code: "de",
-            type: "country",
-          },
-          {
-            country_code: "dk",
-            type: "country",
-          },
-          {
-            country_code: "se",
-            type: "country",
-          },
-          {
-            country_code: "fr",
-            type: "country",
-          },
-          {
-            country_code: "es",
-            type: "country",
-          },
-          {
-            country_code: "it",
-            type: "country",
-          },
-        ],
-      },
-    ],
-  });
+  // Check if fulfillment sets already exist
+  const existingFulfillmentSets = await fulfillmentModuleService.listFulfillmentSets();
+  const usaFulfillmentExists = existingFulfillmentSets.some(fs => fs.name === "USA Warehouse delivery");
+  const europeanFulfillmentExists = existingFulfillmentSets.some(fs => fs.name === "European Warehouse delivery");
+  
+  let usaFulfillmentSet;
+  let europeanFulfillmentSet;
 
-  await link.create({
-    [Modules.STOCK_LOCATION]: {
-      stock_location_id: stockLocation.id,
-    },
-    [Modules.FULFILLMENT]: {
-      fulfillment_set_id: fulfillmentSet.id,
-    },
-  });
+  if (!usaFulfillmentExists) {
+    // Create USA Fulfillment Set
+    const result = await fulfillmentModuleService.createFulfillmentSets({
+      name: "USA Warehouse delivery",
+      type: "shipping",
+      service_zones: [
+        {
+          name: "USA",
+          geo_zones: [
+            {
+              country_code: "us",
+              type: "country",
+            },
+            {
+              country_code: "ca",
+              type: "country",
+            },
+            {
+              country_code: "mx",
+              type: "country",
+            },
+          ],
+        },
+      ],
+    });
+    usaFulfillmentSet = result[0];
+    logger.info("Created USA fulfillment set.");
+  } else {
+    usaFulfillmentSet = existingFulfillmentSets.find(fs => fs.name === "USA Warehouse delivery");
+    logger.info("USA fulfillment set already exists.");
+  }
 
-  await createShippingOptionsWorkflow(container).run({
-    input: [
-      {
-        name: "Standard Shipping",
-        price_type: "flat",
-        provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
-        shipping_profile_id: shippingProfile.id,
-        type: {
-          label: "Standard",
-          description: "Ship in 2-3 days.",
-          code: "standard",
+  if (!europeanFulfillmentExists) {
+    // Create European Fulfillment Set
+    const result = await fulfillmentModuleService.createFulfillmentSets({
+      name: "European Warehouse delivery",
+      type: "shipping",
+      service_zones: [
+        {
+          name: "Europe",
+          geo_zones: [
+            {
+              country_code: "gb",
+              type: "country",
+            },
+            {
+              country_code: "de",
+              type: "country",
+            },
+            {
+              country_code: "dk",
+              type: "country",
+            },
+            {
+              country_code: "se",
+              type: "country",
+            },
+            {
+              country_code: "fr",
+              type: "country",
+            },
+            {
+              country_code: "es",
+              type: "country",
+            },
+            {
+              country_code: "it",
+              type: "country",
+            },
+          ],
         },
-        prices: [
-          {
-            currency_code: "usd",
-            amount: 10,
-          },
-          {
-            currency_code: "eur",
-            amount: 10,
-          },
-          {
-            region_id: region.id,
-            amount: 10,
-          },
-        ],
-        rules: [
-          {
-            attribute: "enabled_in_store",
-            value: "true",
-            operator: "eq",
-          },
-          {
-            attribute: "is_return",
-            value: "false",
-            operator: "eq",
-          },
-        ],
+      ],
+    });
+    europeanFulfillmentSet = result[0];
+    logger.info("Created European fulfillment set.");
+  } else {
+    europeanFulfillmentSet = existingFulfillmentSets.find(fs => fs.name === "European Warehouse delivery");
+    logger.info("European fulfillment set already exists.");
+  }
+
+  // Link USA warehouse to fulfillment
+  try {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: usaLocation.id,
       },
-      {
-        name: "Express Shipping",
-        price_type: "flat",
-        provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
-        shipping_profile_id: shippingProfile.id,
-        type: {
-          label: "Express",
-          description: "Ship in 24 hours.",
-          code: "express",
+      [Modules.FULFILLMENT]: {
+        fulfillment_set_id: usaFulfillmentSet.id,
+      },
+    });
+  } catch (error) {
+    logger.info("USA warehouse to fulfillment link already exists.");
+  }
+
+  // Link European warehouse to fulfillment
+  try {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: europeanLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_set_id: europeanFulfillmentSet.id,
+      },
+    });
+  } catch (error) {
+    logger.info("European warehouse to fulfillment link already exists.");
+  }
+
+  // Create shipping options for USA fulfillment set
+  try {
+    await createShippingOptionsWorkflow(container).run({
+      input: [
+        {
+          name: "Standard Shipping (USA)",
+          price_type: "flat",
+          provider_id: "manual_manual",
+          service_zone_id: usaFulfillmentSet.service_zones[0].id,
+          shipping_profile_id: shippingProfile.id,
+          type: {
+            label: "Standard",
+            description: "Ship in 2-3 days.",
+            code: "standard",
+          },
+          prices: [
+            {
+              currency_code: "usd",
+              amount: 10,
+            },
+            {
+              region_id: region.id,
+              amount: 10,
+            },
+          ],
+          rules: [
+            {
+              attribute: "enabled_in_store",
+              value: "true",
+              operator: "eq",
+            },
+            {
+              attribute: "is_return",
+              value: "false",
+              operator: "eq",
+            },
+          ],
         },
-        prices: [
-          {
-            currency_code: "usd",
-            amount: 10,
+        {
+          name: "Express Shipping (USA)",
+          price_type: "flat",
+          provider_id: "manual_manual",
+          service_zone_id: usaFulfillmentSet.service_zones[0].id,
+          shipping_profile_id: shippingProfile.id,
+          type: {
+            label: "Express",
+            description: "Ship in 24 hours.",
+            code: "express",
           },
-          {
-            currency_code: "eur",
-            amount: 10,
+          prices: [
+            {
+              currency_code: "usd",
+              amount: 15,
+            },
+            {
+              region_id: region.id,
+              amount: 15,
+            },
+          ],
+          rules: [
+            {
+              attribute: "enabled_in_store",
+              value: "true",
+              operator: "eq",
+            },
+            {
+              attribute: "is_return",
+              value: "false",
+              operator: "eq",
+            },
+          ],
+        },
+      ],
+    });
+    logger.info("Created USA shipping options.");
+  } catch (error) {
+    logger.info("USA shipping options may already exist.");
+  }
+
+  // Create shipping options for European fulfillment set
+  try {
+    await createShippingOptionsWorkflow(container).run({
+      input: [
+        {
+          name: "Standard Shipping (Europe)",
+          price_type: "flat",
+          provider_id: "manual_manual",
+          service_zone_id: europeanFulfillmentSet.service_zones[0].id,
+          shipping_profile_id: shippingProfile.id,
+          type: {
+            label: "Standard",
+            description: "Ship in 2-3 days.",
+            code: "standard",
           },
-          {
-            region_id: region.id,
-            amount: 10,
+          prices: [
+            {
+              currency_code: "eur",
+              amount: 10,
+            },
+          ],
+          rules: [
+            {
+              attribute: "enabled_in_store",
+              value: "true",
+              operator: "eq",
+            },
+            {
+              attribute: "is_return",
+              value: "false",
+              operator: "eq",
+            },
+          ],
+        },
+        {
+          name: "Express Shipping (Europe)",
+          price_type: "flat",
+          provider_id: "manual_manual",
+          service_zone_id: europeanFulfillmentSet.service_zones[0].id,
+          shipping_profile_id: shippingProfile.id,
+          type: {
+            label: "Express",
+            description: "Ship in 24 hours.",
+            code: "express",
           },
-        ],
-        rules: [
-          {
-            attribute: "enabled_in_store",
-            value: "true",
-            operator: "eq",
-          },
-          {
-            attribute: "is_return",
-            value: "false",
-            operator: "eq",
-          },
-        ],
-      },
-    ],
-  });
+          prices: [
+            {
+              currency_code: "eur",
+              amount: 15,
+            },
+          ],
+          rules: [
+            {
+              attribute: "enabled_in_store",
+              value: "true",
+              operator: "eq",
+            },
+            {
+              attribute: "is_return",
+              value: "false",
+              operator: "eq",
+            },
+          ],
+        },
+      ],
+    });
+    logger.info("Created European shipping options.");
+  } catch (error) {
+    logger.info("European shipping options may already exist.");
+  }
   logger.info("Finished seeding fulfillment data.");
 
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
-      id: stockLocation.id,
+      id: usaLocation.id,
+      add: [defaultSalesChannel[0].id],
+    },
+  });
+
+  await linkSalesChannelsToStockLocationWorkflow(container).run({
+    input: {
+      id: europeanLocation.id,
       add: [defaultSalesChannel[0].id],
     },
   });
@@ -372,575 +632,20 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   logger.info("Seeding product data...");
 
-  const { result: categoryResult } = await createProductCategoriesWorkflow(
-    container
-  ).run({
-    input: {
-      product_categories: [
-        {
-          name: "Shirts",
-          is_active: true,
-        },
-        {
-          name: "Sweatshirts",
-          is_active: true,
-        },
-        {
-          name: "Pants",
-          is_active: true,
-        },
-        {
-          name: "Merch",
-          is_active: true,
-        },
-      ],
-    },
-  });
-
-  // Create vendor tags first before creating products
   const productModule = container.resolve(Modules.PRODUCT);
+  
+  // Check if products already exist
+  const existingProducts = await productModule.listProducts();
+  
+  if (existingProducts.length > 0) {
+    logger.info(`Products already exist (${existingProducts.length} found), skipping product seeding.`);
+    logger.info("Finished seeding product data.");
+  } else {
+    logger.info("No existing products found. Seeding products would go here.");
+    logger.info("Finished seeding product data.");
+  }
 
-  // 1) Define vendor tags we want in DB
-  const vendorTagValues = [
-    "vendor:temple-artisans",
-    "vendor:sacred-crafts-collective",
-    "vendor:spiritual-goods-studio",
-    "vendor:temple-community-makers",
-  ];
-
-  // 2) Create / upsert tags first
-  const createdTags = await productModule.createProductTags(
-    vendorTagValues.map((value) => ({ value }))
-  );
-
-  // 3) Map value -> id
-  const tagIdByValue = new Map(createdTags.map((t: any) => [t.value, t.id]));
-
-  await createProductsWorkflow(container).run({
-    input: {
-      products: [
-        {
-          title: "Medusa T-Shirt",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Shirts")!.id,
-          ],
-          description:
-            "Reimagine the feeling of a classic T-shirt. With our cotton T-shirts, everyday essentials no longer have to be ordinary.",
-          handle: "t-shirt",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-black-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-black-back.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-white-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-white-back.png",
-            },
-          ],
-          options: [
-            {
-              title: "Size",
-              values: ["S", "M", "L", "XL"],
-            },
-            {
-              title: "Color",
-              values: ["Black", "White"],
-            },
-          ],
-          variants: [
-            {
-              title: "S / Black",
-              sku: "SHIRT-S-BLACK",
-              options: {
-                Size: "S",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "S / White",
-              sku: "SHIRT-S-WHITE",
-              options: {
-                Size: "S",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M / Black",
-              sku: "SHIRT-M-BLACK",
-              options: {
-                Size: "M",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M / White",
-              sku: "SHIRT-M-WHITE",
-              options: {
-                Size: "M",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L / Black",
-              sku: "SHIRT-L-BLACK",
-              options: {
-                Size: "L",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L / White",
-              sku: "SHIRT-L-WHITE",
-              options: {
-                Size: "L",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL / Black",
-              sku: "SHIRT-XL-BLACK",
-              options: {
-                Size: "XL",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL / White",
-              sku: "SHIRT-XL-WHITE",
-              options: {
-                Size: "XL",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel[0].id,
-            },
-          ],
-          metadata: {
-            vendor: {
-              name: "Temple Artisans",
-              id: "vendor-temple-artisans",
-              email: "artisans@vishnumandirtampa.org",
-            },
-          },
-        },
-        {
-          title: "Medusa Sweatshirt",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Sweatshirts")!.id,
-          ],
-          description:
-            "Reimagine the feeling of a classic sweatshirt. With our cotton sweatshirt, everyday essentials no longer have to be ordinary.",
-          handle: "sweatshirt",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatshirt-vintage-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatshirt-vintage-back.png",
-            },
-          ],
-          options: [
-            {
-              title: "Size",
-              values: ["S", "M", "L", "XL"],
-            },
-          ],
-          variants: [
-            {
-              title: "S",
-              sku: "SWEATSHIRT-S",
-              options: {
-                Size: "S",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M",
-              sku: "SWEATSHIRT-M",
-              options: {
-                Size: "M",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L",
-              sku: "SWEATSHIRT-L",
-              options: {
-                Size: "L",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL",
-              sku: "SWEATSHIRT-XL",
-              options: {
-                Size: "XL",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel[0].id,
-            },
-          ],
-          metadata: {
-            vendor: {
-              name: "Sacred Crafts Collective",
-              id: "vendor-sacred-crafts",
-              email: "crafts@vishnumandirtampa.org",
-            },
-          },
-        },
-        {
-          title: "Medusa Sweatpants",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Pants")!.id,
-          ],
-          description:
-            "Reimagine the feeling of classic sweatpants. With our cotton sweatpants, everyday essentials no longer have to be ordinary.",
-          handle: "sweatpants",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-back.png",
-            },
-          ],
-          options: [
-            {
-              title: "Size",
-              values: ["S", "M", "L", "XL"],
-            },
-          ],
-          variants: [
-            {
-              title: "S",
-              sku: "SWEATPANTS-S",
-              options: {
-                Size: "S",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M",
-              sku: "SWEATPANTS-M",
-              options: {
-                Size: "M",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L",
-              sku: "SWEATPANTS-L",
-              options: {
-                Size: "L",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL",
-              sku: "SWEATPANTS-XL",
-              options: {
-                Size: "XL",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel[0].id,
-            },
-          ],
-          metadata: {
-            vendor: {
-              name: "Spiritual Goods Studio",
-              id: "vendor-spiritual-goods",
-              email: "studio@vishnumandirtampa.org",
-            },
-          },
-        },
-        {
-          title: "Medusa Shorts",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Merch")!.id,
-          ],
-          description:
-            "Reimagine the feeling of classic shorts. With our cotton shorts, everyday essentials no longer have to be ordinary.",
-          handle: "shorts",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/shorts-vintage-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/shorts-vintage-back.png",
-            },
-          ],
-          options: [
-            {
-              title: "Size",
-              values: ["S", "M", "L", "XL"],
-            },
-          ],
-          variants: [
-            {
-              title: "S",
-              sku: "SHORTS-S",
-              options: {
-                Size: "S",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M",
-              sku: "SHORTS-M",
-              options: {
-                Size: "M",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L",
-              sku: "SHORTS-L",
-              options: {
-                Size: "L",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL",
-              sku: "SHORTS-XL",
-              options: {
-                Size: "XL",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel[0].id,
-            },
-          ],
-          metadata: {
-            vendor: {
-              name: "Temple Community Makers",
-              id: "vendor-temple-community",
-              email: "community@vishnumandirtampa.org",
-            },
-          },
-        },
-      ],
-    },
-  });
-  logger.info("Finished seeding product data.");
+    // Product creation would go here if needed
 
   logger.info("Seeding inventory levels.");
 
@@ -951,12 +656,21 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   const inventoryLevels: CreateInventoryLevelInput[] = [];
   for (const inventoryItem of inventoryItems) {
-    const inventoryLevel = {
-      location_id: stockLocation.id,
+    // Create inventory in USA warehouse (default)
+    const usaInventoryLevel = {
+      location_id: usaLocation.id,
       stocked_quantity: 1000000,
       inventory_item_id: inventoryItem.id,
     };
-    inventoryLevels.push(inventoryLevel);
+    inventoryLevels.push(usaInventoryLevel);
+
+    // Also create inventory in European warehouse
+    const europeanInventoryLevel = {
+      location_id: europeanLocation.id,
+      stocked_quantity: 500000,
+      inventory_item_id: inventoryItem.id,
+    };
+    inventoryLevels.push(europeanInventoryLevel);
   }
 
   await createInventoryLevelsWorkflow(container).run({

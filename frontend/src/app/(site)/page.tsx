@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Calendar, ArrowRight, Heart, Info } from "lucide-react";
+import { Calendar, ArrowRight, Heart, Info, Users } from "lucide-react";
 import { generateOrganizationSchema } from "@/lib/seo";
 import { fetchAnnouncements, fetchEvents } from "@/lib/strapi";
 import { AnnouncementCard } from "@/components/shared/AnnouncementCard";
@@ -186,12 +186,14 @@ export default async function HomePage() {
                 Make a Donation <Heart className="w-4 h-4" />
               </span>
             </ZeffyButton>
-            <Link
-              href="/calendar"
+            <ZeffyButton
+              formLink="https://www.zeffy.com/embed/ticketing/vishnu-mandir-memberships?modal=true"
               className="group px-8 py-4 bg-white/90 text-primary border-2 border-primary/20 rounded-lg font-semibold hover:bg-white hover:border-primary/30 transition-all duration-300 flex items-center gap-2"
             >
-              View Calendar <Calendar className="w-4 h-4" />
-            </Link>
+              <span className="flex items-center gap-2">
+                Become a Member <Users className="w-4 h-4" />
+              </span>
+            </ZeffyButton>
           </div>
         </div>
       </section>

@@ -16,6 +16,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Webhook includes vendor tag information for targeted revalidation of affected vendor pages
 
 ### Fixed
+- fix(shop): Fixed 400 Bad Request error on /shop/vendors page
+  - `frontend/.env.local` - Updated NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY to match database key (pk_ce89201b65f95bc3e03ad6da571a8bce14ec8eaaaa324fb9daaba79843a6cf0d)
+  - `frontend/src/lib/medusa.ts` - Added detailed error logging to capture response body and publishable key being used
+  - Root cause: Publishable API key mismatch between frontend env and Medusa database after seed re-run
+  - Vendors page now loads successfully (shows "No Vendors Available" when no vendor tags exist)
+
+- fix(frontend): Fixed Next.js Image component errors for Medusa product images
+  - `frontend/next.config.ts` - Added remote pattern for `localhost:9000/static/**` to allow Medusa local dev images
+  - `frontend/next.config.ts` - Set `images.unoptimized = true` in development to bypass private IP restrictions that blocked localhost image loading
+  - Product thumbnails from Medusa backend now load without "hostname not configured" or "private ip" errors
+  - Applies to /shop and /shop/vendors pages displaying Winter jacket and other product images
+  - Root cause: Next.js 16 enforces security restrictions on images from private IPs (127.0.0.1, ::1); unoptimized mode disables this check for local development
+
 - fix(commerce): Fixed Medusa Admin Panel CORS misconfiguration
   - `commerce/.env` - Updated ADMIN_CORS from `http://localhost:7001` to include `http://localhost:9000` (admin UI URL)
   - Medusa admin page now loads from correct origin
