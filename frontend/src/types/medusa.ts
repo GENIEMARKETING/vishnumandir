@@ -72,6 +72,7 @@ export interface MedusaVariant {
   updated_at: string;
   deleted_at: string | null;
   options: MedusaOptionValue[];
+  prices?: { amount: number; currency_code: string }[];
 }
 
 /**
