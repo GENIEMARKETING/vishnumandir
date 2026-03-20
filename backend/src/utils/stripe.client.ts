@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-const apiVersion = process.env.STRIPE_API_VERSION || "2024-11-20.acacia";
+const apiVersion = process.env.STRIPE_API_VERSION || "2025-02-24.acacia";
 
 let stripeInstance: Stripe | null = null;
 
