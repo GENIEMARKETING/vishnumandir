@@ -88,6 +88,11 @@ export default function CheckoutPage() {
       setFormData((prev) => ({
         ...prev,
         billingAddress: {
+          street: "",
+          city: "",
+          state: "",
+          zip: "",
+          country: "",
           ...prev.billingAddress,
           [name]: value,
         },
