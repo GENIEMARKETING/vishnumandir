@@ -6,6 +6,143 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- feat(commerce): Implemented product pricing and discount system
+  - `commerce/src/scripts/add-prices.ts` - Script to add pricing to product variants via Medusa Pricing API
+    - Supports multi-currency pricing (USD and EUR)
+    - Configurable prices per SKU
+    - Integration with Medusa's pricing module
+  
+- feat(database): Created PostgreSQL order and discount tracking schema
+  - `prisma/schema.prisma` - Added comprehensive Order management models:
+    - `Order` model with customer info, addresses, pricing, and status tracking
+    - `OrderItem` model for line items with variant and pricing info
+    - `ShippingAddress` and `BillingAddress` models with full address support
+    - `Discount` model for promotional codes (fixed/percentage, product/order/global scope)
+    - `OrderDiscount` model to track applied discounts per order
+    - `OrderStatus` enum: PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
+    - Proper indexes and foreign keys with cascade deletes
+  
+  - `prisma/migrations/20260220000000_add_commerce_orders_discounts/migration.sql` - Database migration
+    - Creates all order and discount tables with proper relationships
+    - Adds indexes for performance (email, date, status, code)
+    - Enforces referential integrity
+
+- feat(backend): Implemented order and discount services
+  - `backend/src/services/order.service.ts` - Complete order management service:
+    - `createOrder()` - Create orders with items and addresses (transactional)
+    - `getOrderById()`, `getOrderByExternalId()` - Retrieve orders
+    - `getOrdersByCustomerEmail()` - Fetch customer order history
+    - `updateOrder()`, `confirmOrder()`, `cancelOrder()` - Order status management
+    - `getOrdersByStatus()`, `getOrderStatistics()`, `searchOrders()` - Admin queries
+    - Integrates with Prisma for database persistence
+  
+  - `backend/src/services/discount.service.ts` - Discount validation and application:
+    - `validateDiscount()` - Check code validity, expiration, usage limits, minimum amounts
+    - `calculateDiscountAmount()` - Support fixed and percentage discounts
+    - `applyDiscountToOrder()` - Track applied discounts with usage increment
+    - `getActiveDiscounts()`, `listDiscounts()` - Discount management
+    - `createDiscount()`, `updateDiscount()`, `deactivateDiscount()` - Admin operations
+
+- feat(api): Enhanced orders API with full order management
+  - `backend/src/api/v1/orders.routes.ts` - Comprehensive order endpoints:
+    - `POST /v1/orders` - Create orders with validation, customer info, and discount support
+    - `GET /v1/orders/:orderId` - Retrieve order details with items and addresses
+    - `GET /v1/customers/:email/orders` - Get customer order history with pagination
+    - `PATCH /v1/orders/:orderId` - Update order status and metadata
+    - `POST /v1/orders/:orderId/confirm` - Mark order as confirmed/paid
+    - `POST /v1/orders/:orderId/cancel` - Cancel order with reason
+    - All endpoints include proper error handling and validation
+    - Uses OrderService and DiscountService for business logic
+
+- feat(frontend): Enhanced checkout with billing address form and discount support
+  - `frontend/src/app/(site)/shop/checkout/page.tsx` - Checkout form improvements:
+    - Full billing address form fields (address, city, state, zip, country)
+    - Show/hide billing address based on checkbox state
+    - Validation for billing address when different from shipping
+    - Support for discount code submission in checkout flow
+    - Better error messaging for form validation
+  
+  - `frontend/src/app/api/checkout/create-session/route.ts` - Checkout API enhancement:
+    - Support discount code parameter in checkout request
+    - Calls backend to validate and apply discount
+    - Includes discount in order creation request
+    - Passes discount metadata to Stripe session
+    - Proper line item structure (products + tax + shipping as separate items)
+    - Enhanced error handling and validation
+
+### Changed
+
+- refactor(checkout): Improved checkout form validation and data flow
+  - Customer details (email, name, phone) now properly captured and sent to backend
+  - Address data structure aligned with PostgreSQL schema
+  - Better form state management for billing address toggle
+  - Enhanced error messages for better user experience
+
+- refactor(api): Order creation now persists to PostgreSQL
+  - Orders saved to database for customer and admin access
+  - Customer phone number now optional in order creation
+  - Added state field to addresses (was missing)
+  - Order totals now include discount tracking
+  - All orders tracked with timestamps and status for reporting
+
+### Fixed
+
+- fix(checkout): Billing address fields now appear when checkbox is unchecked
+  - Previously was just a placeholder comment
+  - Now displays full form with all required fields
+  - Form validation properly checks billing address when needed
+
+- fix(checkout): Implemented complete e-commerce checkout flow
+  - `frontend/src/app/(site)/shop/cart/page.tsx` - Shopping cart page displaying all items with:
+    - Product image, title, quantity, and price per item
+    - Quantity increment/decrement buttons
+    - Remove item functionality
+    - Order summary with subtotal, tax, shipping, and total
+    - "Proceed to Checkout" and "Continue Shopping" buttons
+    - Free shipping promotion messaging ($50 threshold)
+    - Empty cart state with helpful messaging
+  
+  - `frontend/src/app/(site)/shop/checkout/page.tsx` - Checkout form collecting:
+    - Customer contact information (email, full name, phone)
+    - Shipping address (street, city, state, zip, country)
+    - Billing address option (same as shipping or different)
+    - Order summary display
+    - Form validation and error handling
+    - Submits to `/api/checkout/create-session` to create order and Stripe session
+  
+  - `frontend/src/app/(site)/shop/checkout/success/page.tsx` - Post-payment success page showing:
+    - Order confirmation message
+    - Estimated delivery timeframe (5-7 business days)
+    - Email confirmation receipt info
+    - Auto-clears cart on mount
+    - Links to continue shopping or return home
+  
+  - `frontend/src/app/(site)/shop/checkout/cancelled/page.tsx` - Payment cancellation page showing:
+    - Friendly cancellation message
+    - Explanation that cart items are preserved
+    - Next steps and support options
+    - Links back to cart or shop
+
+- feat(api): Created Stripe checkout session API route
+  - `frontend/src/app/api/checkout/create-session/route.ts` - Handles checkout flow:
+    - Validates cart items and customer information using Zod
+    - Creates Medusa order with items, shipping/billing addresses, and customer details
+    - Creates Stripe checkout session with line items for products, tax, and shipping
+    - Returns checkout session URL for frontend redirect
+    - Comprehensive error handling and logging
+    - Stores Medusa order ID in Stripe metadata for webhook matching
+
+- feat(webhooks): Created Stripe webhook handler for payment confirmation
+  - `frontend/src/app/api/webhooks/stripe/route.ts` - Handles Stripe events:
+    - Verifies webhook signature for security
+    - Processes `checkout.session.completed` event
+    - Updates Medusa order payment status to "paid"
+    - Sends order confirmation email via Resend with order details
+    - Handles checkout session expiration gracefully
+    - Professional HTML email template with order summary
+
 ### Fixed
 - fix(cart): Implemented complete add to cart functionality
   - `frontend/src/components/shared/AddToCartButton.tsx` - Replaced placeholder with functional component featuring:

@@ -55,3 +55,7 @@ next-env.d.ts
 cms/.tmp
 cms/.strapi
 cms/.env
+cms/public/uploads/
+
+# New UI source folder (design reference only)
+vishnu-mandir new UI/

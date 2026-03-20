@@ -51,7 +51,7 @@
     "requirements": {
       "type": "text"
     },
-    "status": {
+    "approvalStatus": {
       "type": "enumeration",
       "enum": ["pending", "approved", "rejected"],
       "default": "pending",

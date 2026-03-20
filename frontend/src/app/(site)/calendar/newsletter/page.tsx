@@ -1,243 +1,116 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Mail, FileText, Download, ArrowRight } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
-import { Mail, FileText } from "lucide-react";
 import { fetchNewsletters } from "@/lib/strapi";
-import { NewsletterCard } from "@/components/shared/NewsletterCard";
+import { PageHero } from "@/components/shared/PageHero";
+import { GeneralAnimations } from "@/components/animations/GeneralAnimations";
+import { EmailSubscriptionForm } from "@/components/forms/EmailSubscriptionForm";
 
 export const metadata: Metadata = {
   title: "Newsletter | Vishnu Mandir, Tampa - Archive & Subscription",
   description:
-    "Access the Vishnu Mandir, Tampa newsletter archive and subscribe to receive updates about temple events, festivals, and community news.",
-  keywords: [
-    "Vishnu Mandir newsletter",
-    "Tampa temple newsletter",
-    "Hindu temple newsletter",
-    "Tampa Bay Hindu community news",
-  ],
+    "Subscribe to the Vishnu Mandir, Tampa newsletter and browse our archive of past issues. Stay connected with temple news and events.",
   openGraph: {
     title: "Newsletter | Vishnu Mandir, Tampa",
-    description: "Subscribe to our newsletter and access the newsletter archive.",
+    description: "Subscribe and browse our newsletter archive.",
     type: "website",
   },
 };
 
-// ISR revalidation: 1 hour (newsletters are published periodically)
 export const revalidate = 3600;
 
-/**
- * Newsletter page - Temple newsletter archive.
- * @returns {JSX.Element} The rendered newsletter page
- */
 export default async function NewsletterPage() {
   const structuredData = generateWebPageSchema({
     name: "Newsletter",
-    description:
-      "Newsletter archive and subscription for Vishnu Mandir, Tampa",
+    description: "Newsletter archive and subscription for Vishnu Mandir, Tampa",
     url: "/calendar/newsletter",
   });
 
-  // Fetch newsletters from Strapi
   const newsletters = await fetchNewsletters();
+  const validNewsletters = newsletters.filter((n) => n?.attributes);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <GeneralAnimations />
+
+      <PageHero
+        tagline="Stay Informed"
+        title="Newsletter"
+        subtitle="Subscribe to receive temple updates, event announcements, and community news directly in your inbox."
+        patternId="newsletter-pat"
       />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-6">
-          Newsletter
-        </h1>
-        <p className="text-xl text-text-secondary mb-8 font-serif">
-          Access our temple newsletter archive and stay updated with temple news
-          and events.
-        </p>
 
-        {/* Introduction */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-12">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-primary/10 rounded-full text-primary">
-              <Mail className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-                Stay Connected with Our Community
-              </h2>
-              <p className="text-text-secondary leading-relaxed mb-4">
-                The Vishnu Mandir, Tampa newsletter keeps you informed about
-                upcoming events, festivals, special puja services, educational
-                programs, and community news. Our newsletter is published
-                regularly and includes important announcements, event schedules,
-                and updates from the temple.
-              </p>
-              <p className="text-text-secondary leading-relaxed">
-                Subscribe to receive our newsletter directly in your inbox, or
-                browse our archive to access past issues. The newsletter is a
-                valuable resource for staying connected with temple activities
-                and the Hindu community in Tampa Bay.
-              </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid lg:grid-cols-5 gap-12">
+
+          {/* Subscribe form — sticky sidebar */}
+          <div className="lg:col-span-2">
+            <div data-gsap="fade-left" className="sticky top-28 opacity-0">
+              <div className="bg-temple-red rounded-3xl p-8 text-white shadow-xl">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-5">
+                  <Mail size={24} />
+                </div>
+                <h2 className="font-display text-2xl font-bold mb-3">Subscribe</h2>
+                <p className="text-stone-200 text-sm mb-7 leading-relaxed">
+                  Get temple updates, event announcements, and community news delivered to your inbox.
+                </p>
+                <div className="bg-white rounded-2xl p-5">
+                  <EmailSubscriptionForm />
+                </div>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Newsletter Archive */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-8">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-6">
-            Newsletter Archive
-          </h2>
-          {newsletters.length > 0 ? (
-            <div className="space-y-4">
-              {newsletters.map((newsletter) => (
-                <NewsletterCard key={newsletter.id} newsletter={newsletter} />
-              ))}
+          {/* Newsletter archive */}
+          <div className="lg:col-span-3">
+            <div data-gsap="section-heading" className="mb-10 opacity-0">
+              <div className="flex items-center gap-4 mb-2">
+                <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+                <h2 className="font-display text-3xl text-temple-red uppercase tracking-widest">Archive</h2>
+              </div>
+              <p className="text-stone-500 italic mt-2">Browse past issues of our community newsletter</p>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-primary/40 mx-auto mb-4" />
-              <p className="text-text-secondary mb-4">
-                Newsletter archive will be available here. Past issues will be
-                accessible as PDF downloads.
-              </p>
-              <p className="text-text-secondary text-sm">
-                Check back soon for archived newsletters, or contact us to receive
-                past issues.
-              </p>
-            </div>
-          )}
-        </section>
 
-        {/* Subscribe Section */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-8">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Subscribe to Our Newsletter
-          </h2>
-          <p className="text-text-secondary leading-relaxed mb-6">
-            Receive our newsletter directly in your email inbox. Stay updated
-            with:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4 mb-6">
-            <li>Upcoming festivals and special events</li>
-            <li>Puja schedules and service announcements</li>
-            <li>Educational program updates</li>
-            <li>Cultural event information</li>
-            <li>Temple news and community updates</li>
-            <li>Volunteer opportunities</li>
-          </ul>
-          <div className="bg-primary/5 rounded-lg p-6">
-            <h3 className="font-semibold text-text-primary mb-4">
-              Newsletter Subscription Form
-            </h3>
-            <form
-              action="#"
-              method="post"
-              className="space-y-4"
-              aria-label="Newsletter subscription form"
-            >
-              <div>
-                <label
-                  htmlFor="newsletter-email"
-                  className="block text-sm font-medium text-text-primary mb-2"
-                >
-                  Email Address <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="newsletter-email"
-                  name="email"
-                  required
-                  aria-required="true"
-                  autoComplete="email"
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="your.email@example.com"
-                />
+            {validNewsletters.length > 0 ? (
+              <div className="space-y-4">
+                {validNewsletters.map((newsletter, i) => {
+                  const { title, publicationDate, file } = newsletter.attributes;
+                  const fileUrl = file?.data?.attributes?.url;
+                  const date = publicationDate ? new Date(publicationDate).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+                  return (
+                    <div key={newsletter.id} data-gsap="card" className="bg-white rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all duration-300 p-6 flex items-center gap-5 group opacity-0">
+                      <div className="w-12 h-12 bg-temple-red/10 rounded-xl flex items-center justify-center text-temple-red flex-shrink-0 group-hover:bg-temple-red group-hover:text-white transition-all">
+                        <FileText size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-serif font-bold text-stone-800 group-hover:text-temple-red transition-colors truncate">{title}</h3>
+                        {date && <p className="text-stone-400 text-sm mt-0.5">{date}</p>}
+                      </div>
+                      {fileUrl && (
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 bg-stone-100 hover:bg-temple-red hover:text-white text-stone-600 px-4 py-2 rounded-full text-sm font-semibold transition-all flex-shrink-0"
+                        >
+                          <Download size={14} /> Download
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <label
-                  htmlFor="newsletter-name"
-                  className="block text-sm font-medium text-text-primary mb-2"
-                >
-                  Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  id="newsletter-name"
-                  name="name"
-                  autoComplete="name"
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Your name"
-                />
+            ) : (
+              <div data-gsap="fade-up" className="text-center py-12 bg-stone-50 rounded-3xl border border-stone-100 opacity-0">
+                <FileText size={40} className="text-stone-300 mx-auto mb-4" />
+                <h3 className="font-serif text-xl font-bold text-stone-600 mb-2">Archive Coming Soon</h3>
+                <p className="text-stone-400 text-sm">Past newsletters will appear here once added to the CMS.</p>
               </div>
-              <div>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="eventUpdates"
-                    className="w-5 h-5 text-primary border-border rounded focus:ring-2 focus:ring-primary"
-                  />
-                  <span className="text-text-secondary">
-                    I also want event and program updates
-                  </span>
-                </label>
-              </div>
-              <button
-                type="submit"
-                className="w-full px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              >
-                <Mail className="w-5 h-5" />
-                Subscribe to Newsletter
-              </button>
-            </form>
-            <p className="text-sm text-text-secondary mt-4">
-              Note: This form is currently a placeholder. For immediate
-              subscription, please contact us at (813) 269-7262 or email
-              info@vishnumandirtampa.com.
-            </p>
+            )}
           </div>
-        </section>
-
-        {/* Alternative Subscription */}
-        <section className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-8 border-2 border-primary/5">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Other Ways to Stay Updated
-          </h2>
-          <p className="text-text-secondary leading-relaxed mb-6">
-            In addition to our newsletter, you can stay informed through:
-          </p>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold text-text-primary mb-2">
-                Website Calendar
-              </h3>
-              <p className="text-text-secondary text-sm mb-3">
-                Check our online calendar for current events and schedules.
-              </p>
-              <Link
-                href="/calendar"
-                className="text-primary hover:text-primary/80 text-sm"
-              >
-                View Calendar →
-              </Link>
-            </div>
-            <div>
-              <h3 className="font-semibold text-text-primary mb-2">
-                Direct Contact
-              </h3>
-              <p className="text-text-secondary text-sm mb-3">
-                Call us at (813) 269-7262 or email sakeemj@live.com for event
-                information.
-              </p>
-              <Link
-                href="/about/contact"
-                className="text-primary hover:text-primary/80 text-sm"
-              >
-                Contact Us →
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </>
   );
 }

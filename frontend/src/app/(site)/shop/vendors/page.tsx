@@ -1,190 +1,106 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Store, ArrowRight } from "lucide-react";
+import { Store, ArrowRight, ShoppingBag } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
 import { fetchProductsWithVendors } from "@/lib/medusa";
+import { PageHero } from "@/components/shared/PageHero";
+import { GeneralAnimations } from "@/components/animations/GeneralAnimations";
 
 export const metadata: Metadata = {
   title: "Vendors | Vishnu Mandir Shop - Browse Our Partners",
-  description:
-    "Discover our trusted vendor partners at Vishnu Mandir, Tampa. Explore unique spiritual items and products from our community makers.",
-  keywords: [
-    "vendors",
-    "Vishnu Mandir shop vendors",
-    "temple artisans",
-    "spiritual goods",
-    "Hindu merchandise Tampa",
-    "temple partners",
-  ],
-  openGraph: {
-    title: "Vendors | Vishnu Mandir Shop",
-    description: "Discover our trusted vendor partners and their collections.",
-    type: "website",
-  },
+  description: "Discover our trusted vendor partners at Vishnu Mandir, Tampa.",
+  openGraph: { title: "Vendors | Vishnu Mandir Shop", type: "website" },
 };
 
-// ISR revalidation: 5 minutes for vendor data
 export const revalidate = 300;
 
-/**
- * Fetch unique vendors from all products
- */
 async function fetchAllVendors() {
   const result = await fetchProductsWithVendors();
-  
-  if (!result.ok) {
-    return { ok: false, error: result.error, vendors: [] };
-  }
+  if (!result.ok) return { ok: false as const, error: result.error, vendors: [] };
 
-  // Extract unique vendors with product counts
-  const vendorMap = new Map<
-    string,
-    { slug: string; name: string; productCount: number }
-  >();
-
+  const vendorMap = new Map<string, { slug: string; name: string; productCount: number }>();
   for (const product of result.data.products) {
     if (product.vendor?.slug) {
       const existing = vendorMap.get(product.vendor.slug);
-      if (existing) {
-        existing.productCount += 1;
-      } else {
-        vendorMap.set(product.vendor.slug, {
-          slug: product.vendor.slug,
-          name: product.vendor.name,
-          productCount: 1,
-        });
-      }
+      if (existing) existing.productCount += 1;
+      else vendorMap.set(product.vendor.slug, { slug: product.vendor.slug, name: product.vendor.name, productCount: 1 });
     }
   }
-
-  const vendors = Array.from(vendorMap.values()).sort(
-    (a, b) => b.productCount - a.productCount
-  );
-
-  return { ok: true, error: null, vendors };
+  return { ok: true as const, error: null, vendors: Array.from(vendorMap.values()).sort((a, b) => b.productCount - a.productCount) };
 }
 
-/**
- * Vendors page - displays all vendors with links to their storefronts
- */
 export default async function VendorsPage() {
   const { ok, error, vendors } = await fetchAllVendors();
-
-  const structuredData = generateWebPageSchema({
-    name: "Vendors",
-    description: "Browse our vendor partners and their product collections",
-    url: "/shop/vendors",
-  });
+  const structuredData = generateWebPageSchema({ name: "Vendors", description: "Browse vendor partners", url: "/shop/vendors" });
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <GeneralAnimations />
+
+      <PageHero
+        tagline="Our Trusted Partners"
+        title="Shop by Vendor"
+        subtitle="Explore unique spiritual items and products from our curated community of trusted vendors and makers."
+        patternId="vendors-pat"
       />
-      <main className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-4">
-            Our Vendors
-          </h1>
-          <p className="text-xl text-text-secondary font-serif max-w-2xl">
-            Discover the talented artisans and craftspeople who create our spiritual items and
-            merchandise. Each vendor brings unique expertise and dedication to their craft.
-          </p>
-        </div>
 
-        {/* Error State */}
-        {!ok && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-6 mb-8 rounded-r-lg dark:bg-red-900/20 dark:border-red-700">
-            <div className="flex items-start gap-3">
-              <Store className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5 dark:text-red-400" />
-              <div>
-                <h2 className="font-semibold text-red-800 dark:text-red-300 mb-1">
-                  Unable to Load Vendors
-                </h2>
-                <p className="text-red-700 dark:text-red-400 text-sm">
-                  {error || "There was an issue loading our vendor information. Please try again later."}
-                </p>
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          <div data-gsap="section-heading" className="flex items-center justify-between mb-12 opacity-0">
+            <div className="flex items-center gap-4">
+              <div data-gsap="gold-line" data-width="40px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-3xl text-temple-red uppercase tracking-widest">All Vendors</h2>
+            </div>
+            <Link href="/shop" className="inline-flex items-center gap-2 text-temple-red font-medium hover:underline text-sm">
+              <ShoppingBag size={15} /> All Products
+            </Link>
+          </div>
+
+          {!ok && (
+            <div data-gsap="fade-up" className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center opacity-0">
+              <p className="text-red-600">{error || "Unable to load vendors. Please try again later."}</p>
+            </div>
+          )}
+
+          {ok && vendors.length === 0 && (
+            <div data-gsap="fade-up" className="text-center py-20 opacity-0">
+              <div className="w-20 h-20 bg-temple-red/10 rounded-3xl flex items-center justify-center text-temple-red mx-auto mb-6">
+                <Store size={36} />
               </div>
+              <h2 className="font-display text-2xl text-stone-800 mb-3">No Vendors Yet</h2>
+              <p className="text-stone-500">Vendor profiles will appear here once products are added to the shop.</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Empty State */}
-        {ok && vendors.length === 0 && (
-          <div className="bg-background rounded-xl p-12 border-2 border-primary/5 text-center">
-            <Store className="w-16 h-16 text-primary/30 mx-auto mb-4" />
-            <h2 className="font-serif text-2xl font-semibold text-text-primary mb-2">
-              No Vendors Available
-            </h2>
-            <p className="text-text-secondary">
-              We're currently adding vendors to our platform. Please check back soon!
-            </p>
-          </div>
-        )}
-
-        {/* Vendors Grid */}
-        {ok && vendors.length > 0 && (
-          <>
-            <div className="mb-8">
-              <p className="text-text-secondary">
-                {vendors.length} vendor{vendors.length !== 1 ? "s" : ""} available
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {vendors.map((vendor) => (
+          {ok && vendors.length > 0 && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {vendors.map((vendor, i) => (
                 <Link
                   key={vendor.slug}
                   href={`/shop/vendor/${vendor.slug}`}
-                  className="group relative overflow-hidden rounded-xl border-2 border-primary/10 bg-gradient-to-br from-background to-background/50 p-8 hover:border-primary/30 transition-all hover:shadow-lg dark:from-gray-900 dark:to-gray-800"
+                  data-gsap="card"
+                  className="group bg-white rounded-2xl border border-stone-100 shadow-sm hover:shadow-lg hover:border-temple-red/20 hover:-translate-y-1 transition-all duration-300 p-7 flex flex-col opacity-0"
                 >
-                  {/* Background accent */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                  {/* Content */}
-                  <div className="relative z-10">
-                    {/* Icon */}
-                    <div className="mb-4 inline-flex p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <Store className="w-6 h-6 text-primary" />
-                    </div>
-
-                    {/* Name */}
-                    <h3 className="font-serif text-2xl font-semibold text-text-primary mb-2 group-hover:text-primary transition-colors">
-                      {vendor.name}
-                    </h3>
-
-                    {/* Product Count */}
-                    <p className="text-sm text-text-secondary mb-6">
-                      {vendor.productCount} product{vendor.productCount !== 1 ? "s" : ""}
-                    </p>
-
-                    {/* CTA */}
-                    <div className="flex items-center gap-2 text-primary font-medium group-hover:gap-3 transition-all">
-                      <span>View Collection</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </div>
+                  <div className="w-14 h-14 bg-temple-red/10 rounded-2xl flex items-center justify-center text-temple-red mb-5 group-hover:bg-temple-red group-hover:text-white transition-all duration-300">
+                    <Store size={26} />
+                  </div>
+                  <h3 className="font-serif text-xl font-bold text-stone-800 group-hover:text-temple-red transition-colors mb-2">
+                    {vendor.name}
+                  </h3>
+                  <p className="text-stone-500 text-sm mb-5">
+                    {vendor.productCount} {vendor.productCount === 1 ? "product" : "products"}
+                  </p>
+                  <div className="flex items-center gap-1 text-temple-red text-sm font-semibold mt-auto group-hover:gap-2 transition-all">
+                    View Collection <ArrowRight size={15} />
                   </div>
                 </Link>
               ))}
             </div>
-          </>
-        )}
-
-        {/* Browse All Products CTA */}
-        <div className="mt-16 pt-8 border-t border-border text-center">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Browse All Products
-          </h2>
-          <Link
-            href="/shop"
-            className="inline-block bg-primary text-white px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-          >
-            View All Items
-          </Link>
+          )}
         </div>
-      </main>
+      </section>
     </>
   );
 }

@@ -1,38 +1,98 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Image from "next/image";
+import { Heart, Users, BookOpen, Globe, Shield, Sparkles } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
+import { fetchBoardMembers } from "@/lib/strapi";
+import { BoardTree } from "@/components/shared/BoardTree";
+import { AboutAnimations } from "@/components/animations/AboutAnimations";
+import { ZeffyButton } from "@/components/ui/ZeffyButton";
 
 export const metadata: Metadata = {
-  title: "About Us | Vishnu Mandir, Tampa - Mission, Vision & History",
+  title: "About Us | Vishnu Mandir, Tampa - Mission, Vision & Leadership",
   description:
-    "Learn about Vishnu Mandir Tampa's mission, vision, and history. Serving the Hindu community in Tampa Bay since 2003 with spiritual guidance and cultural preservation.",
-  keywords: [
-    "Vishnu Mandir Tampa",
-    "Hindu temple Tampa",
-    "about Hindu temple",
-    "Tampa Bay Hindu community",
-    "Hindu temple history",
-    "Tampa temple mission",
-  ],
+    "Learn about Vishnu Mandir Tampa's mission, vision, history, and the Board of Trustees guiding our community since 2003.",
   openGraph: {
     title: "About Us | Vishnu Mandir, Tampa",
-    description:
-      "Learn about our mission, vision, and history serving the Tampa Bay Hindu community.",
+    description: "Our mission, vision, history and leadership team.",
     type: "website",
   },
 };
 
-/**
- * About Us page - Mission, vision, and history.
- * @returns {JSX.Element} The rendered about us page
- */
-export default function AboutUsPage() {
+export const revalidate = 3600;
+
+const commitments = [
+  {
+    icon: <Heart size={24} />,
+    title: "Spiritual Leadership",
+    desc: "Fostering a deep spiritual environment where devotees can grow in their faith and connect with the divine.",
+  },
+  {
+    icon: <Users size={24} />,
+    title: "Community Service",
+    desc: "Serving the broader Hindu community and promoting interfaith understanding across Tampa Bay.",
+  },
+  {
+    icon: <Globe size={24} />,
+    title: "Cultural Preservation",
+    desc: "Preserving and promoting Hindu traditions, festivals, and values for generations to come.",
+  },
+  {
+    icon: <BookOpen size={24} />,
+    title: "Educational Excellence",
+    desc: "Providing quality educational programs in Sanskrit, scripture, and cultural arts for all ages.",
+  },
+  {
+    icon: <Shield size={24} />,
+    title: "Transparent Governance",
+    desc: "Managing temple resources with full accountability, integrity, and open community reporting.",
+  },
+  {
+    icon: <Sparkles size={24} />,
+    title: "New Temple Vision",
+    desc: "Building a purpose-designed spiritual campus to serve our community for the next century.",
+  },
+];
+
+export default async function AboutUsPage() {
   const structuredData = generateWebPageSchema({
     name: "About Us",
-    description:
-      "Mission, vision, and history of Vishnu Mandir, Tampa - serving the Hindu community since 2003",
+    description: "Mission, vision, history and leadership of Vishnu Mandir, Tampa",
     url: "/about/about",
   });
+
+  // Fetch board members from Strapi — falls back to static data if empty
+  const boardMembers = await fetchBoardMembers();
+
+  // Static fallback data used when Strapi has no board members yet
+  const staticPresident = {
+    id: 0,
+    attributes: {
+      name: "Kishore Ramdhani",
+      role: "President",
+      tier: "President" as const,
+      displayOrder: 1,
+      publishedAt: null,
+      createdAt: "",
+      updatedAt: "",
+    },
+  };
+  const staticExecutives = [
+    { id: 1, attributes: { name: "Jonah Bajnath",        role: "Treasurer", tier: "Executive" as const, displayOrder: 2, publishedAt: null, createdAt: "", updatedAt: "" } },
+    { id: 2, attributes: { name: "Dr. Ram P. Ramcharran", role: "Secretary", tier: "Executive" as const, displayOrder: 3, publishedAt: null, createdAt: "", updatedAt: "" } },
+  ];
+  const staticDirectors = [
+    "Shantia Singh","Tara Dindial","Ramesh Maharana","Narie Persad",
+    "Lettie Naraine","Jonah Bajnath","Dr. Ram Ramcharran","Mado Jaimangal",
+    "Ramesh Sayroo","Omardeo Ramdhani","Raj Samlall","Harry K. Lekhram",
+  ].map((name, i) => ({
+    id: 10 + i,
+    attributes: { name, role: "Director", tier: "Director" as const, displayOrder: 10 + i, publishedAt: null, createdAt: "", updatedAt: "" },
+  }));
+
+  const displayMembers =
+    boardMembers.length > 0
+      ? boardMembers
+      : [staticPresident, ...staticExecutives, ...staticDirectors];
 
   return (
     <>
@@ -40,217 +100,151 @@ export default function AboutUsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-6">
-          About Vishnu Mandir, Tampa
-        </h1>
-        <p className="text-xl text-text-secondary mb-8 font-serif">
-          Learn about our mission, vision, and history serving the Hindu
-          community in Tampa Bay.
-        </p>
+      <AboutAnimations />
 
-        <div className="space-y-12">
-          {/* Mission Section */}
-          <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm">
-            <h2 className="font-serif text-3xl font-semibold text-text-primary mb-4">
-              Our Mission
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-4">
-              Vishnu Mandir, Tampa is dedicated to establishing a space of deep
-              spiritual understanding for our community. Our mission is to give
-              each member an equal opportunity to voice their opinion and lead a
-              life as defined by Hindu Dharma. We strive to utilize novel methods
-              to connect devotees with their faith while preserving our rich
-              cultural heritage.
-            </p>
-            <p className="text-text-secondary leading-relaxed">
-              Through daily worship, educational programs, cultural events, and
-              community service, we aim to foster spiritual growth, cultural
-              preservation, and unity within the Hindu community of Tampa Bay.
-            </p>
-          </section>
-
-          {/* Vision Section */}
-          <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm">
-            <h2 className="font-serif text-3xl font-semibold text-text-primary mb-4">
-              Our Vision
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-4">
-              We envision Vishnu Mandir as a beacon of Hindu spirituality and
-              culture in the Tampa Bay area, where devotees of all ages can come
-              together to worship, learn, and celebrate. Our vision includes:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-text-secondary leading-relaxed ml-4">
-              <li>
-                Providing a sacred space for daily worship and spiritual
-                practices
-              </li>
-              <li>
-                Preserving and promoting Hindu traditions, festivals, and
-                cultural heritage
-              </li>
-              <li>
-                Educating the next generation about Hindu philosophy, scriptures,
-                and values
-              </li>
-              <li>
-                Building a strong, inclusive community that supports all members
-              </li>
-              <li>
-                Serving as a bridge between different cultures and fostering
-                interfaith understanding
-              </li>
-            </ul>
-          </section>
-
-          {/* History Section */}
-          <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm">
-            <h2 className="font-serif text-3xl font-semibold text-text-primary mb-4">
-              Our History
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-4">
-              Vishnu Mandir, Tampa has been serving the Hindu community in the
-              Tampa Bay area since 2003. Originally located in Ybor City's Palm
-              Avenue, our temple relocated to Lynn Road to better serve our
-              growing community and accommodate the increasing number of devotees.
-            </p>
-            <p className="text-text-secondary leading-relaxed mb-4">
-              Over the years, we have established ourselves as a center for
-              Hindu worship, education, and cultural activities. We follow the
-              practices and doctrines of Hinduism, observing a wide range of
-              Hindu rites and ceremonies including:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-text-secondary leading-relaxed ml-4">
-              <li>
-                <strong>Aarti:</strong> Daily prayer ceremonies with lamps and
-                incense
-              </li>
-              <li>
-                <strong>Sanskaaras:</strong> Traditional life-cycle ceremonies
-              </li>
-              <li>
-                <strong>Havans:</strong> Sacred fire rituals
-              </li>
-              <li>
-                <strong>Bhoomi Pujan:</strong> Ground-breaking ceremonies
-              </li>
-              <li>
-                <strong>Yagyopaveet:</strong> Thread ceremony (sacred thread
-                initiation)
-              </li>
-              <li>
-                <strong>Namakaran:</strong> Naming ceremonies for newborns
-              </li>
-              <li>
-                <strong>Vivah:</strong> Marriage ceremonies
-              </li>
-            </ul>
-            <p className="text-text-secondary leading-relaxed mt-4">
-              Today, Vishnu Mandir continues to grow and evolve, always staying
-              true to our core values of devotion, community, and service.
-            </p>
-          </section>
-
-          {/* Services Overview */}
-          <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm">
-            <h2 className="font-serif text-3xl font-semibold text-text-primary mb-4">
-              What We Offer
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-6">
-              Vishnu Mandir, Tampa provides a comprehensive range of services
-              and programs for the Hindu community:
-            </p>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-serif text-xl font-semibold text-text-primary mb-2">
-                  Religious Services
-                </h3>
-                <ul className="list-disc list-inside space-y-1 text-text-secondary ml-4">
-                  <li>Daily puja schedules</li>
-                  <li>Puja services catalog</li>
-                  <li>Festival celebrations</li>
-                  <li>Priest services</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-serif text-xl font-semibold text-text-primary mb-2">
-                  Community Programs
-                </h3>
-                <ul className="list-disc list-inside space-y-1 text-text-secondary ml-4">
-                  <li>Cultural events and performances</li>
-                  <li>Educational classes</li>
-                  <li>Youth programs</li>
-                  <li>Volunteer opportunities</li>
-                </ul>
-              </div>
-            </div>
-            <div className="mt-6">
-              <Link
-                href="/religious/puja-schedule"
-                className="inline-flex items-center text-primary font-medium hover:text-primary/80 transition-colors"
-              >
-                View Puja Schedule →
-              </Link>
-            </div>
-          </section>
-
-          {/* Meet Our Priests */}
-          <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm">
-            <h2 className="font-serif text-3xl font-semibold text-text-primary mb-4">
-              Meet Our Priests
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-6">
-              Our dedicated priests are spiritual guides experienced in Vedic
-              traditions and Hindu ceremonies. They are available to conduct pujas,
-              perform special ceremonies, and provide spiritual guidance to all
-              devotees.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/religious/priests"
-                className="inline-block px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors text-center"
-              >
-                View Our Priests
-              </Link>
-              <Link
-                href="/forms/puja-sponsorships"
-                className="inline-block px-6 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors text-center"
-              >
-                Request a Puja Service
-              </Link>
-            </div>
-          </section>
-
-          {/* Contact CTA */}
-          <section className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-8 border-2 border-primary/5">
-            <h2 className="font-serif text-3xl font-semibold text-text-primary mb-4">
-              Visit Us
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-4">
-              We welcome all devotees to visit Vishnu Mandir, Tampa. Whether
-              you're seeking spiritual guidance, participating in worship, or
-              simply exploring Hindu culture, our doors are open to you.
-            </p>
-            <div className="space-y-2 text-text-secondary mb-6">
-              <p>
-                <strong>Address:</strong> 5803 Lynn Road, Tampa, FL 33624
-              </p>
-              <p>
-                <strong>Phone:</strong> (813) 269-7262
-              </p>
-              <p>
-                <strong>Email:</strong> info@vishnumandirtampa.com
-              </p>
-            </div>
-            <Link
-              href="/about/contact"
-              className="inline-block px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-            >
-              Contact Us
-            </Link>
-          </section>
+      {/* ── PAGE HERO ─────────────────────────────────────────────────── */}
+      <section className="relative py-28 overflow-hidden bg-temple-red">
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="hero-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+              <path d="M40 0 L80 40 L40 80 L0 40 Z" fill="white" />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#hero-pattern)" />
+          </svg>
         </div>
-      </main>
+
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+          <span
+            data-gsap="page-hero-tag"
+            className="inline-block text-temple-gold font-serif italic text-lg mb-4 opacity-0"
+          >
+            Serving Tampa Bay Since 2003
+          </span>
+          <h1
+            data-gsap="page-hero-title"
+            className="font-display text-5xl md:text-6xl font-bold mb-6 opacity-0"
+          >
+            About Vishnu Mandir
+          </h1>
+          <p
+            data-gsap="page-hero-sub"
+            className="text-xl text-stone-200 max-w-2xl mx-auto leading-relaxed opacity-0"
+          >
+            A sacred community rooted in devotion, tradition, and service — welcoming all who seek spiritual growth and cultural connection.
+          </p>
+        </div>
+      </section>
+
+      {/* ── MISSION & HISTORY ─────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+
+            <div data-gsap="about-image" className="relative opacity-0">
+              <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/images/home/event-major-festivals.jpg"
+                  alt="Vishnu Mandir Tampa"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="absolute -bottom-6 -right-6 w-36 h-36 bg-temple-gold/10 rounded-full blur-3xl -z-10" />
+              {/* Year badge */}
+              <div className="absolute -top-4 -left-4 bg-temple-red text-white rounded-2xl px-5 py-3 shadow-xl">
+                <p className="text-3xl font-display font-bold leading-none">2003</p>
+                <p className="text-xs text-stone-200 uppercase tracking-widest mt-1">Founded</p>
+              </div>
+            </div>
+
+            <div data-gsap="about-text" className="space-y-6 opacity-0">
+              <div className="inline-flex items-center gap-4">
+                <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+                <h2 className="text-temple-red font-serif text-3xl uppercase tracking-widest">Our Story</h2>
+                <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              </div>
+
+              <div className="space-y-5 text-stone-600 leading-relaxed text-lg">
+                <p>
+                  Vishnu Mandir, Tampa has been serving the Hindu community in the Tampa Bay area
+                  since 2003. Originally located in Ybor City&apos;s Palm Avenue, our temple relocated
+                  to 5803 Lynn Road to better serve our growing community.
+                </p>
+                <p>
+                  We follow the practices and doctrines of Hinduism, observing a wide range of Hindu
+                  rites and ceremonies including Aarti, Sanskaaras, Havans, Bhoomi Pujan,
+                  Yagyopaveet (Thread Ceremony), Namakaran (Naming ceremony), and Vivah (marriage).
+                </p>
+                <p>
+                  Our mission is to establish a space of deep spiritual understanding for our
+                  community, giving each member an equal opportunity to voice their opinion and lead
+                  a life as defined by Hindu Dharma.
+                </p>
+              </div>
+
+              <ZeffyButton
+                formLink="https://www.zeffy.com/embed/donation-form/monthly-donor-4?modal=true"
+                className="inline-flex items-center gap-2 bg-temple-red text-white px-8 py-3 rounded-full font-medium hover:bg-red-900 transition-all shadow-lg mt-4"
+              >
+                <Heart size={18} fill="currentColor" />
+                Support Our Mission
+              </ZeffyButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── OUR COMMITMENT ────────────────────────────────────────────── */}
+      <section className="py-24 bg-stone-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-16 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-4">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Our Commitment</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+            </div>
+            <p className="text-stone-500 italic text-lg">The pillars that guide everything we do</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {commitments.map((item, i) => (
+              <div
+                key={i}
+                data-gsap="commit-card"
+                className="bg-white p-8 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group opacity-0"
+              >
+                <div className="w-12 h-12 rounded-xl bg-temple-red/10 flex items-center justify-center text-temple-red mb-5 group-hover:bg-temple-red group-hover:text-white transition-all duration-300">
+                  {item.icon}
+                </div>
+                <h3 className="font-serif text-lg font-bold text-stone-800 mb-2">{item.title}</h3>
+                <p className="text-stone-500 text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── BOARD OF TRUSTEES ─────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-6 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-4">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Leadership</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+            </div>
+            <p className="text-stone-500 italic text-lg">
+              Dedicated volunteers who guide our temple with vision and service
+            </p>
+          </div>
+
+          <div className="mt-12">
+            <BoardTree members={displayMembers} />
+          </div>
+        </div>
+      </section>
     </>
   );
 }

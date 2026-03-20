@@ -1,31 +1,64 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Heart, RefreshCw, Sparkles, Users, Shield, ArrowRight } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
-import { Heart, Gift, Users, FileText, ArrowRight } from "lucide-react";
 import { ZeffyButton } from "@/components/ui/ZeffyButton";
+import { PageHero } from "@/components/shared/PageHero";
+import { GeneralAnimations } from "@/components/animations/GeneralAnimations";
 
 export const metadata: Metadata = {
-  title: "Support | Vishnu Mandir, Tampa - Ways to Support the Temple",
+  title: "Support | Vishnu Mandir, Tampa - Ways to Give & Get Involved",
   description:
-    "Support Vishnu Mandir, Tampa through donations, sponsorships, memberships, and volunteering. Help us serve and strengthen the Hindu community.",
-  keywords: [
-    "donate temple Tampa",
-    "support Hindu temple",
-    "puja sponsorship",
-    "temple membership",
-    "volunteer temple",
-  ],
+    "Support Vishnu Mandir, Tampa through donations, recurring giving, puja sponsorships, and membership. Every contribution helps preserve our temple and serve our community.",
   openGraph: {
     title: "Support | Vishnu Mandir, Tampa",
-    description: "Multiple ways to support Vishnu Mandir, Tampa and the community.",
+    description: "Ways to support Vishnu Mandir, Tampa.",
     type: "website",
   },
 };
 
-/**
- * Support hub page - Ways to support the temple including donations, sponsorships, and memberships.
- * @returns {JSX.Element} The rendered support page
- */
+const supportOptions = [
+  {
+    icon: <Heart size={32} fill="currentColor" />,
+    title: "Make a Donation",
+    desc: "Your one-time gift directly supports daily puja services, facility maintenance, and community programs. Every amount makes a difference.",
+    cta: "Donate Now",
+    zeffy: "https://www.zeffy.com/embed/donation-form/monthly-donor-4?modal=true",
+    highlight: true,
+  },
+  {
+    icon: <RefreshCw size={32} />,
+    title: "Recurring Donation",
+    desc: "Set up a monthly or annual donation to provide consistent, reliable support that helps us plan and grow our programs year-round.",
+    cta: "Set Up Recurring",
+    href: "/recurring-donation",
+    highlight: false,
+  },
+  {
+    icon: <Sparkles size={32} />,
+    title: "Sponsor a Puja",
+    desc: "Sponsor a puja service at the temple in honor of a family occasion, in memory of a loved one, or for personal blessings and well-being.",
+    cta: "Sponsor Online",
+    zeffy: "https://www.zeffy.com/embed/donation-form/online-puja?modal=true",
+    highlight: false,
+  },
+  {
+    icon: <Users size={32} />,
+    title: "Become a Member",
+    desc: "Become an official member of Vishnu Mandir, Tampa. Membership gives you a voice in our community and supports all our programs.",
+    cta: "Join Today",
+    zeffy: "https://www.zeffy.com/embed/ticketing/vishnu-mandir-memberships?modal=true",
+    highlight: false,
+  },
+];
+
+const transparency = [
+  { title: "Financial Oversight", desc: "All funds are managed and reviewed by the Board of Trustees." },
+  { title: "Regular Updates", desc: "Donors receive updates on how contributions are being used." },
+  { title: "Tax Deductible", desc: "Vishnu Mandir is a registered 501(c)(3) non-profit organization." },
+  { title: "Public Accounting", desc: "Financial reports are available to community members on request." },
+];
+
 export default function SupportPage() {
   const structuredData = generateWebPageSchema({
     name: "Support",
@@ -35,188 +68,119 @@ export default function SupportPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <GeneralAnimations />
+
+      <PageHero
+        tagline="Give Back to the Community"
+        title="Support the Temple"
+        subtitle="Your generosity keeps our sacred space alive — from daily pujas to the new building fund. Every contribution matters."
+        patternId="support-pat"
       />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-6">
-          Support Vishnu Mandir, Tampa
-        </h1>
-        <p className="text-xl text-text-secondary mb-12 font-serif max-w-3xl">
-          Your support helps us maintain our sacred space, sustain our programs, and strengthen
-          our community. Whether through donations, sponsorships, or membership, every contribution
-          makes a meaningful difference.
-        </p>
 
-        {/* Support Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {/* Donations */}
-          <Link
-            href="/support/donate"
-            className="group bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm hover:shadow-lg hover:border-primary/20 transition-all duration-300"
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-4 bg-primary/10 rounded-full text-primary">
-                <Heart className="w-8 h-8" />
-              </div>
-              <ArrowRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+      {/* ── SUPPORT OPTIONS ───────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-16 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-2">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Ways to Give</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
             </div>
-            <h2 className="font-serif text-2xl font-semibold text-text-primary mb-3">
-              Make a Donation
-            </h2>
-            <p className="text-text-secondary mb-4">
-              Support the temple with one-time or recurring donations. All contributions are
-              tax-deductible and directly support our mission.
-            </p>
-            <span className="inline-flex items-center gap-2 text-primary font-semibold group-hover:gap-3 transition-all">
-              Donate Now
-              <ArrowRight className="w-4 h-4" />
-            </span>
-          </Link>
+          </div>
 
-          {/* Recurring Donations */}
-          <Link
-            href="/recurring-donation"
-            className="group bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm hover:shadow-lg hover:border-primary/20 transition-all duration-300"
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-4 bg-secondary/10 rounded-full text-secondary">
-                <Gift className="w-8 h-8" />
+          <div className="grid sm:grid-cols-2 gap-6">
+            {supportOptions.map((opt, i) => (
+              <div
+                key={i}
+                data-gsap="card"
+                className={`group rounded-3xl p-8 border transition-all duration-300 hover:-translate-y-1 opacity-0 ${
+                  opt.highlight
+                    ? "bg-temple-red border-temple-red text-white shadow-xl"
+                    : "bg-white border-stone-100 shadow-md hover:shadow-xl hover:border-temple-red/20"
+                }`}
+              >
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${
+                  opt.highlight ? "bg-white/20 text-white" : "bg-temple-red/10 text-temple-red"
+                }`}>
+                  {opt.icon}
+                </div>
+                <h3 className={`font-display text-2xl font-bold mb-3 ${opt.highlight ? "text-white" : "text-stone-800"}`}>
+                  {opt.title}
+                </h3>
+                <p className={`leading-relaxed mb-7 ${opt.highlight ? "text-stone-200" : "text-stone-500"}`}>
+                  {opt.desc}
+                </p>
+                {opt.zeffy ? (
+                  <ZeffyButton
+                    formLink={opt.zeffy}
+                    className={`inline-flex items-center gap-2 px-7 py-3 rounded-full font-bold transition-all shadow-md ${
+                      opt.highlight
+                        ? "bg-white text-temple-red hover:bg-stone-100"
+                        : "bg-temple-red text-white hover:bg-red-900"
+                    }`}
+                  >
+                    <Heart size={16} fill="currentColor" /> {opt.cta}
+                  </ZeffyButton>
+                ) : (
+                  <Link
+                    href={opt.href!}
+                    className="inline-flex items-center gap-2 bg-temple-red text-white px-7 py-3 rounded-full font-bold hover:bg-red-900 transition-all shadow-md"
+                  >
+                    {opt.cta} <ArrowRight size={16} />
+                  </Link>
+                )}
               </div>
-              <ArrowRight className="w-5 h-5 text-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <h2 className="font-serif text-2xl font-semibold text-text-primary mb-3">
-              Recurring Donations
-            </h2>
-            <p className="text-text-secondary mb-4">
-              Set up monthly or annual donations to provide consistent support for the temple's
-              ongoing operations and programs.
-            </p>
-            <span className="inline-flex items-center gap-2 text-secondary font-semibold group-hover:gap-3 transition-all">
-              Set Up Recurring
-              <ArrowRight className="w-4 h-4" />
-            </span>
-          </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Puja Sponsorship */}
-          <Link
-            href="/online-puja"
-            className="group bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm hover:shadow-lg hover:border-primary/20 transition-all duration-300"
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-4 bg-accent/10 rounded-full text-accent">
-                <FileText className="w-8 h-8" />
-              </div>
-              <ArrowRight className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+      {/* ── BUILDING FUND ─────────────────────────────────────────────── */}
+      <section className="py-20 bg-stone-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="cta-block" className="bg-gradient-to-br from-stone-900 to-stone-800 rounded-3xl p-10 md:p-14 text-white text-center shadow-2xl opacity-0">
+            <div className="w-16 h-16 bg-temple-gold/20 rounded-2xl flex items-center justify-center text-temple-gold mx-auto mb-6">
+              <Heart size={32} fill="currentColor" />
             </div>
-            <h2 className="font-serif text-2xl font-semibold text-text-primary mb-3">
-              Sponsor a Puja
-            </h2>
-            <p className="text-text-secondary mb-4">
-              Sponsor a puja for your family, special occasions, or in memory of loved ones. A
-              meaningful way to celebrate and honor traditions.
-            </p>
-            <span className="inline-flex items-center gap-2 text-accent font-semibold group-hover:gap-3 transition-all">
-              Sponsor Puja
-              <ArrowRight className="w-4 h-4" />
-            </span>
-          </Link>
-
-          {/* Membership */}
-          <div className="group bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer">
-            <div className="flex items-start justify-between mb-6">
-              <div className="p-4 bg-text-primary/10 rounded-full text-text-primary">
-                <Users className="w-8 h-8" />
-              </div>
-              <ArrowRight className="w-5 h-5 text-text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <h2 className="font-serif text-2xl font-semibold text-text-primary mb-3">
-              Become a Member
-            </h2>
-            <p className="text-text-secondary mb-4">
-              Join our temple community as a member and enjoy exclusive benefits, priority event
-              access, and deeper spiritual engagement.
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">New Temple Building Fund</h2>
+            <p className="text-stone-300 leading-relaxed max-w-2xl mx-auto mb-8 text-lg">
+              Help us build a permanent spiritual home for generations to come. Every donation to the building fund brings us closer to our vision of a purpose-built temple campus for the Tampa Bay community.
             </p>
             <ZeffyButton
-              formLink="https://www.zeffy.com/embed/ticketing/vishnu-mandir-memberships?modal=true"
-              className="inline-flex items-center gap-2 text-text-primary font-semibold group-hover:gap-3 transition-all hover:text-primary"
+              formLink="https://www.zeffy.com/embed/donation-form/vishnu-mandir-building-fund?modal=true"
+              className="bg-temple-gold text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-amber-600 transition-all shadow-xl inline-flex items-center gap-3"
             >
-              Join Now
-              <ArrowRight className="w-4 h-4" />
+              <Heart size={20} fill="currentColor" /> Support the Building Fund
             </ZeffyButton>
           </div>
         </div>
+      </section>
 
-        {/* Additional Ways to Support */}
-        <section className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-8 border-2 border-primary/5 mb-12">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-6">
-            Other Ways to Support
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold text-text-primary mb-2">Volunteer</h3>
-              <p className="text-text-secondary mb-4">
-                Give your time and talents to support temple operations and community service.
-              </p>
-              <Link
-                href="/about/volunteer"
-                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+      {/* ── TRANSPARENCY ──────────────────────────────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-12 opacity-0">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-3xl text-temple-red uppercase tracking-widest">Transparency & Stewardship</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
             </div>
-            <div>
-              <h3 className="font-semibold text-text-primary mb-2">Request Donation Statement</h3>
-              <p className="text-text-secondary mb-4">
-                Access your donation records for tax purposes. Submit a request for your donation
-                statement.
-              </p>
-              <Link
-                href="/forms/donation-statement"
-                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                Request Now
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+            <p className="text-stone-500 italic mt-2">Your trust is sacred to us</p>
           </div>
-        </section>
-
-        {/* Why Your Support Matters */}
-        <section>
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-6">
-            Why Your Support Matters
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg p-6 border border-primary/10">
-              <div className="text-3xl font-bold text-primary mb-2">Daily</div>
-              <h3 className="font-semibold text-text-primary mb-2">Puja Services</h3>
-              <p className="text-text-secondary text-sm">
-                Your donations support daily puja services and maintain our sacred spaces for
-                spiritual practice.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-6 border border-primary/10">
-              <div className="text-3xl font-bold text-secondary mb-2">Community</div>
-              <h3 className="font-semibold text-text-primary mb-2">Programs</h3>
-              <p className="text-text-secondary text-sm">
-                Support educational classes, cultural events, and community gatherings that enrich
-                our temple family.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-6 border border-primary/10">
-              <div className="text-3xl font-bold text-accent mb-2">Spiritual</div>
-              <h3 className="font-semibold text-text-primary mb-2">Growth</h3>
-              <p className="text-text-secondary text-sm">
-                Help us maintain and expand services that foster spiritual development for all
-                ages.
-              </p>
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {transparency.map((t, i) => (
+              <div key={i} data-gsap="card" className="bg-stone-50 rounded-2xl p-6 border border-stone-100 text-center group hover:border-temple-red/20 hover:shadow-md transition-all opacity-0">
+                <div className="w-10 h-10 bg-temple-red/10 rounded-xl flex items-center justify-center text-temple-red mx-auto mb-4 group-hover:bg-temple-red group-hover:text-white transition-all">
+                  <Shield size={18} />
+                </div>
+                <h3 className="font-serif font-bold text-stone-800 mb-2">{t.title}</h3>
+                <p className="text-stone-500 text-sm leading-relaxed">{t.desc}</p>
+              </div>
+            ))}
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
     </>
   );
 }

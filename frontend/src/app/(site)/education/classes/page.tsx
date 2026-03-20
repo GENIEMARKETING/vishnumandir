@@ -1,175 +1,171 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BookOpen, Music, Palette, ScrollText, Users, Download, Phone } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
-import { BookOpen, Users, Clock } from "lucide-react";
+import { PageHero } from "@/components/shared/PageHero";
+import { GeneralAnimations } from "@/components/animations/GeneralAnimations";
 
 export const metadata: Metadata = {
-  title: "Educational Classes | Vishnu Mandir, Tampa - Sanskrit, Scripture & More",
+  title: "Learn With Us | Vishnu Mandir, Tampa - Classes & Educational Resources",
   description:
-    "Learn about educational classes at Vishnu Mandir, Tampa including Sanskrit language, Hindu scriptures, music, cultural arts, and classes for all ages.",
-  keywords: [
-    "Sanskrit classes Tampa",
-    "Hindu scripture study",
-    "Tampa temple classes",
-    "cultural education classes",
-  ],
+    "Join educational classes at Vishnu Mandir, Tampa — Sanskrit, Hindu scriptures, music, bhajans, and cultural arts. Resources and learning materials also available.",
   openGraph: {
-    title: "Educational Classes | Vishnu Mandir, Tampa",
-    description: "Educational classes including Sanskrit, Hindu scriptures, music, and cultural arts.",
+    title: "Learn With Us | Vishnu Mandir, Tampa",
+    description: "Classes, programs, and educational resources at Vishnu Mandir, Tampa.",
     type: "website",
   },
 };
 
-/**
- * Education Classes page - Details on classes and workshops.
- * @returns {JSX.Element} The rendered education classes page
- */
-export default function EducationClassesPage() {
+const classes = [
+  {
+    icon: <ScrollText size={26} />,
+    name: "Sanskrit Language",
+    description: "Learn Sanskrit, the ancient language of Hindu scriptures. Classes available for beginners through advanced levels with experienced instructors.",
+    audience: "All Ages",
+    schedule: "Sundays",
+    color: "from-blue-500 to-blue-700",
+  },
+  {
+    icon: <BookOpen size={26} />,
+    name: "Hindu Scriptures",
+    description: "Study the Bhagavad Gita, Ramayana, Mahabharata, and Upanishads with guided instruction from knowledgeable teachers.",
+    audience: "Youth & Adults",
+    schedule: "Sundays",
+    color: "from-amber-500 to-amber-700",
+  },
+  {
+    icon: <Music size={26} />,
+    name: "Music & Bhajans",
+    description: "Learn devotional music, bhajans, and traditional Indian music. Classes available for vocal and instrumental music at all skill levels.",
+    audience: "All Ages",
+    schedule: "Saturdays",
+    color: "from-rose-500 to-rose-700",
+  },
+  {
+    icon: <Palette size={26} />,
+    name: "Cultural Arts",
+    description: "Explore traditional Indian dance, art, and cultural practices. Classes help preserve and share our rich heritage with younger generations.",
+    audience: "Children & Youth",
+    schedule: "Saturdays",
+    color: "from-green-500 to-green-700",
+  },
+];
+
+const resources = [
+  { icon: "📖", name: "Study Guides", desc: "Downloadable study guides for Hindu scriptures and texts.", available: false },
+  { icon: "🎵", name: "Bhajan Lyrics", desc: "Lyrics and translations for popular bhajans and devotional songs.", available: false },
+  { icon: "🗣️", name: "Sanskrit Primer", desc: "Beginner's guide to Sanskrit alphabets, words, and pronunciation.", available: false },
+  { icon: "📚", name: "Reading List", desc: "Curated list of recommended books for spiritual and cultural learning.", available: false },
+  { icon: "🎨", name: "Art Templates", desc: "Templates for rangoli, mehndi, and other traditional art forms.", available: false },
+  { icon: "📝", name: "Sloka Collection", desc: "Collection of important slokas with meaning and pronunciation guide.", available: false },
+];
+
+export default function LearnWithUsPage() {
   const structuredData = generateWebPageSchema({
-    name: "Educational Classes",
-    description:
-      "Educational classes at Vishnu Mandir, Tampa",
+    name: "Learn With Us",
+    description: "Educational classes and resources at Vishnu Mandir, Tampa",
     url: "/education/classes",
   });
 
-  const classes = [
-    {
-      name: "Sanskrit Language",
-      description:
-        "Learn Sanskrit, the ancient language of Hindu scriptures. Classes available for beginners to advanced levels.",
-      audience: "All ages",
-    },
-    {
-      name: "Hindu Scriptures",
-      description:
-        "Study Hindu scriptures including Bhagavad Gita, Ramayana, Mahabharata, and Upanishads with guided instruction.",
-      audience: "Youth & Adults",
-    },
-    {
-      name: "Music & Bhajans",
-      description:
-        "Learn devotional music, bhajans, and traditional Indian music. Classes for vocal and instrumental music.",
-      audience: "All ages",
-    },
-    {
-      name: "Cultural Arts",
-      description:
-        "Explore traditional Indian dance, art, and cultural practices. Classes help preserve and share our rich heritage.",
-      audience: "Children & Youth",
-    },
-  ];
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <GeneralAnimations />
+
+      <PageHero
+        tagline="Sunday Pathshala & More"
+        title="Learn With Us"
+        subtitle="Deepening knowledge of Hindu dharma, culture, and traditions through classes, workshops, and educational resources for all ages."
+        patternId="edu-pat"
       />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-6">
-          Educational Classes
-        </h1>
-        <p className="text-xl text-text-secondary mb-8 font-serif">
-          Learn about our educational classes including language, religion, music,
-          and more.
-        </p>
 
-        {/* Introduction */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-12">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-primary/10 rounded-full text-primary">
-              <BookOpen className="w-6 h-6" />
+      {/* ── CLASSES ───────────────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-16 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-2">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Classes & Programs</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
             </div>
-            <div>
-              <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-                Comprehensive Learning Opportunities
-              </h2>
-              <p className="text-text-secondary leading-relaxed mb-4">
-                Vishnu Mandir, Tampa offers a variety of educational classes
-                designed to help students of all ages learn about Hindu
-                philosophy, culture, language, and arts. Our classes are taught by
-                experienced instructors who are passionate about sharing knowledge
-                and preserving our traditions.
-              </p>
-              <p className="text-text-secondary leading-relaxed">
-                Classes are typically held on weekends or weekday evenings to
-                accommodate various schedules. Registration information and
-                schedules are announced in advance, and new students are always
-                welcome.
-              </p>
+            <p className="text-stone-500 italic text-lg mt-2">Open to all community members — beginners welcome</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {classes.map((cls, i) => (
+              <div
+                key={i}
+                data-gsap="card"
+                className="group bg-white rounded-3xl overflow-hidden border border-stone-100 shadow-md hover:shadow-xl transition-all duration-500 opacity-0"
+              >
+                {/* Coloured header strip */}
+                <div className={`bg-gradient-to-r ${cls.color} px-8 py-6 flex items-center gap-4`}>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white">
+                    {cls.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-white">{cls.name}</h3>
+                    <p className="text-white/80 text-sm">{cls.schedule}</p>
+                  </div>
+                </div>
+
+                <div className="p-7 space-y-4">
+                  <p className="text-stone-600 leading-relaxed">{cls.description}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-temple-gold/10 rounded-lg text-temple-gold">
+                      <Users size={14} />
+                    </div>
+                    <span className="text-sm font-semibold text-stone-600">For: {cls.audience}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Enroll CTA */}
+          <div data-gsap="cta-block" className="mt-14 bg-gradient-to-br from-temple-red to-red-900 rounded-3xl p-10 text-white text-center shadow-xl opacity-0">
+            <h3 className="font-display text-2xl font-bold mb-3">Ready to Enroll?</h3>
+            <p className="text-stone-200 mb-7 max-w-lg mx-auto">Contact us to register for any class or to learn about the current schedule and requirements.</p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <a href="tel:+18132697262" className="bg-white text-temple-red px-8 py-3 rounded-full font-bold hover:bg-stone-100 transition-all shadow-md inline-flex items-center gap-2">
+                <Phone size={16} /> (813) 269-7262
+              </a>
+              <a href="mailto:info@vishnumandirtampa.com" className="bg-white/10 border border-white/30 text-white px-8 py-3 rounded-full font-medium hover:bg-white/20 transition-all">
+                Email Us
+              </a>
             </div>
           </div>
-        </section>
-
-        {/* Classes Grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          {classes.map((classItem, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl p-6 border-2 border-primary/5 shadow-warm"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <BookOpen className="w-5 h-5 text-primary" />
-                <h3 className="font-serif text-xl font-semibold text-text-primary">
-                  {classItem.name}
-                </h3>
-              </div>
-              <p className="text-text-secondary text-sm leading-relaxed mb-4">
-                {classItem.description}
-              </p>
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <Users className="w-4 h-4 text-primary" />
-                <span>{classItem.audience}</span>
-              </div>
-            </div>
-          ))}
         </div>
+      </section>
 
-        {/* Registration */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-8">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Class Registration
-          </h2>
-          <p className="text-text-secondary leading-relaxed mb-4">
-            To register for classes or learn more about schedules, fees, and
-            requirements:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4 mb-6">
-            <li>Contact us at (813) 269-7262</li>
-            <li>Email info@vishnumandirtampa.com with your class interest</li>
-            <li>Check our calendar for class schedules and registration dates</li>
-            <li>Visit the temple during office hours to speak with instructors</li>
-          </ul>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/about/contact"
-              className="inline-block px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors text-center"
-            >
-              Contact Us
-            </Link>
-            <Link
-              href="/calendar"
-              className="inline-block px-6 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors text-center"
-            >
-              View Calendar
-            </Link>
+      {/* ── RESOURCES ─────────────────────────────────────────────────── */}
+      <section className="py-24 bg-stone-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-16 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-2">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Learning Resources</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+            </div>
+            <p className="text-stone-500 italic text-lg mt-2">Free materials to support your spiritual learning journey</p>
           </div>
-        </section>
 
-        {/* Additional Information */}
-        <section className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-8 border-2 border-primary/5">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Benefits of Our Classes
-          </h2>
-          <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4">
-            <li>Learn from experienced and dedicated instructors</li>
-            <li>Connect with fellow students and community members</li>
-            <li>Deepen your understanding of Hindu philosophy and culture</li>
-            <li>Preserve and pass on traditions to future generations</li>
-            <li>Build a strong foundation in Sanskrit and scriptures</li>
-          </ul>
-        </section>
-      </main>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {resources.map((r, i) => (
+              <div key={i} data-gsap="card" className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 group hover:border-temple-red/20 hover:shadow-md transition-all duration-300 opacity-0">
+                <span className="text-4xl block mb-4">{r.icon}</span>
+                <h3 className="font-serif text-lg font-bold text-stone-800 mb-2 group-hover:text-temple-red transition-colors">{r.name}</h3>
+                <p className="text-stone-500 text-sm leading-relaxed mb-5">{r.desc}</p>
+                <button
+                  disabled={!r.available}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all bg-stone-100 text-stone-400 cursor-not-allowed"
+                >
+                  <Download size={15} /> Coming Soon
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </>
   );
 }

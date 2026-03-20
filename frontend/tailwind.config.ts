@@ -24,6 +24,12 @@ const config: Config = {
         success: "#16a34a",
         warning: "#f59e0b",
         error: "#dc2626",
+
+        // New UI Theme Colors
+        "temple-red": "#8B2E0F",
+        "temple-orange": "#D97706",
+        "temple-cream": "#FDFBF7",
+        "temple-gold": "#C5A059",
       },
       fontFamily: {
         display: ["var(--font-cinzel)", "serif"],

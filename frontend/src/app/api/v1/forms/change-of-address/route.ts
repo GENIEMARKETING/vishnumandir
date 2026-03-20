@@ -1,78 +1,35 @@
 import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-responses";
+import { strapiCreate, generateTransactionId } from "@/lib/strapi-submit";
+import { sendFormConfirmation, sendAdminNotification } from "@/lib/email";
 
-/**
- * POST /api/v1/forms/change-of-address
- * Proxy endpoint that forwards change of address form submissions to the backend.
- */
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+    const body = await request.json().catch(() => ({}));
+    if (!body.email) return errorResponse("Email is required", 400);
+    if (!body.name)  return errorResponse("Full name is required", 400);
 
-    // Validate required environment variables
-    if (!backendUrl) {
-      console.error("[api/v1/forms/change-of-address] NEXT_PUBLIC_API_URL not configured");
-      return errorResponse(
-        "Backend API URL not configured. Contact administrator.",
-        500
-      );
-    }
+    const transactionId = generateTransactionId();
 
-    if (!apiKey) {
-      console.error("[api/v1/forms/change-of-address] NEXT_PUBLIC_API_KEY not configured");
-      return errorResponse("API key not configured", 500);
-    }
-
-    // Forward the request to the backend
-    const response = await fetch(`${backendUrl}/api/v1/forms/change-of-address`, {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "Content-Type": "application/json",
-      },
-      body: await request.text(),
+    const result = await strapiCreate("form-submissions", {
+      formType: "CHANGE_OF_ADDRESS",
+      email: body.email,
+      name: body.name,
+      payload: { phone: body.phone || null, street: body.street || null, city: body.city || null, state: body.state || null, zip: body.zip || null },
+      transactionId,
     });
 
-    // Check Content-Type before parsing
-    const responseContentType = response.headers.get("content-type") || "";
-    const isJson = responseContentType.includes("application/json");
+    if (!result.ok)
+      return errorResponse("Unable to update address. Please call (813) 269-7262.", 500);
 
-    let data: any;
-    if (isJson) {
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        // If JSON parsing fails, read as text for error message
-        const text = await response.text();
-        console.error("[api/v1/forms/change-of-address] Failed to parse JSON response:", text.substring(0, 200));
-        return errorResponse(
-          `Backend returned invalid response: ${text.substring(0, 100)}`,
-          response.status
-        );
-      }
-    } else {
-      // Non-JSON response (likely HTML error page)
-      const text = await response.text();
-      console.error("[api/v1/forms/change-of-address] Backend returned non-JSON:", text.substring(0, 200));
-      return errorResponse(
-        `Backend error: ${response.status} ${response.statusText}. ${text.substring(0, 100)}`,
-        response.status
-      );
-    }
+    await Promise.allSettled([
+      sendFormConfirmation({ to: body.email, name: body.name, formType: "CHANGE_OF_ADDRESS", transactionId }),
+      sendAdminNotification({ formType: "Change of Address", submitterName: body.name, submitterEmail: body.email, details: { "New Address": [body.street, body.city, body.state, body.zip].filter(Boolean).join(", ") || null, "New Phone": body.phone || null }, transactionId }),
+    ]);
 
-    if (!response.ok) {
-      return errorResponse(
-        data?.error || data?.message || "Backend request failed",
-        response.status,
-        data?.errors
-      );
-    }
-
-    return successResponse(data.data || data, response.status);
-  } catch (error) {
-    console.error("[api/v1/forms/change-of-address]", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return errorResponse(message, 500);
+    return successResponse({ message: "Address update request received! Your records will be updated within 3 business days.", transactionId }, 201);
+  } catch (err) {
+    console.error("[api/v1/forms/change-of-address]", err);
+    return errorResponse("Internal server error", 500);
   }
 }

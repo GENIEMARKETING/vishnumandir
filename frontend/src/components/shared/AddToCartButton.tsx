@@ -31,8 +31,8 @@ export function AddToCartButton({ product, variant = "primary" }: AddToCartButto
 
   const buttonClasses =
     variant === "primary"
-      ? "bg-primary text-white hover:bg-primary/90"
-      : "border-2 border-primary text-primary hover:bg-primary/5";
+      ? "bg-temple-red text-white hover:bg-red-900"
+      : "border-2 border-temple-red text-temple-red hover:bg-temple-red/5";
 
   /**
    * Handle adding product to cart
@@ -119,7 +119,7 @@ export function AddToCartButton({ product, variant = "primary" }: AddToCartButto
       {/* Variant Selection */}
       {hasAvailableVariants && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text-primary">
+          <label className="text-sm font-medium text-stone-800">
             Select Option
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -131,8 +131,8 @@ export function AddToCartButton({ product, variant = "primary" }: AddToCartButto
                   onClick={() => setSelectedVariantId(prod_variant.id)}
                   className={`p-2 text-sm border-2 rounded-lg transition-all ${
                     selectedVariantId === prod_variant.id
-                      ? "border-primary bg-primary/10 text-text-primary font-medium"
-                      : "border-border text-text-secondary hover:border-primary/50"
+                      ? "border-temple-red bg-temple-red/10 text-stone-800 font-medium"
+                      : "border-border text-stone-500 hover:border-temple-red/50"
                   }`}
                 >
                   {optionTitle}
@@ -146,7 +146,7 @@ export function AddToCartButton({ product, variant = "primary" }: AddToCartButto
       {/* Quantity Selector */}
       {selectedVariantId && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text-primary">
+          <label className="text-sm font-medium text-stone-800">
             Quantity
           </label>
           <div className="flex items-center gap-2 border border-border rounded-lg p-2">

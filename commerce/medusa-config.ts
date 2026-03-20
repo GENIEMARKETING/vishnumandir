@@ -12,6 +12,13 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
+  },
+  // Admin UI customization
+  admin: {
+    // Custom admin pages can be added here
+    // The discounts page is available at /admin/app/discounts
+    // The pricing widget is auto-injected on product detail pages
   }
 })
+
 

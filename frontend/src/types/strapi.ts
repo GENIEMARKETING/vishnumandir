@@ -149,6 +149,7 @@ export interface StrapiAnnouncement {
     content: string; // Rich text (JSON)
     displayUntil?: string; // ISO date string
     level?: "Info" | "High-Priority";
+    image?: StrapiMedia;
     publishedAt: string | null;
     createdAt: string;
     updatedAt: string;
@@ -182,6 +183,24 @@ export interface StrapiNewsletter {
         };
       } | null;
     };
+    publishedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * BoardMember content type from Strapi
+ */
+export interface StrapiBoardMember {
+  id: number;
+  attributes: {
+    name: string;
+    role: string;
+    tier: "President" | "Executive" | "Director";
+    bio?: string;
+    photo?: StrapiMedia;
+    displayOrder?: number;
     publishedAt: string | null;
     createdAt: string;
     updatedAt: string;

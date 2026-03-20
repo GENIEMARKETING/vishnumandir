@@ -124,3 +124,156 @@ model FormSubmission {
   transactionId String             @unique
   createdAt     DateTime           @default(now())
 }
+
+model Order {
+  id                String            @id @default(cuid())
+  externalId        String?           @unique // Medusa order ID or Stripe order ID
+  email             String
+  customerName      String
+  customerPhone     String?
+
+  // Addresses
+  shippingAddress   ShippingAddress?
+  billingAddress    BillingAddress?
+
+  // Order Items
+  items             OrderItem[]
+
+  // Pricing
+  subtotal          Int // in cents
+  tax               Int // in cents
+  shipping          Int // in cents
+  discountTotal     Int               @default(0) // in cents
+  total             Int // in cents
+
+  // Discount tracking
+  appliedDiscounts  OrderDiscount[]
+
+  // Status
+  status            OrderStatus       @default(PENDING)
+  paymentStatus     String?
+  stripeSessionId   String?
+
+  // Metadata
+  notes             String?           @db.Text
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([email])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model ShippingAddress {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  address1      String
+  address2      String?
+  city          String
+  state         String
+  postalCode    String
+  countryCode   String
+}
+
+model BillingAddress {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  address1      String
+  address2      String?
+  city          String
+  state         String
+  postalCode    String
+  countryCode   String
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  variantId     String // Medusa variant ID
+  variantTitle  String
+  productTitle  String
+  sku           String?
+
+  quantity      Int
+  unitPrice     Int // in cents
+  lineTotal     Int // in cents (unitPrice * quantity)
+
+  createdAt     DateTime @default(now())
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model Discount {
+  id              String          @id @default(cuid())
+  code            String          @unique
+  
+  // Discount type
+  type            DiscountType
+  value           Int // e.g., 1000 for $10 or 10 for 10%
+
+  // Scope
+  scope           DiscountScope
+  productIds      String[] // JSON array of Medusa product IDs (if scope=PRODUCT)
+
+  // Rules
+  minOrderAmount  Int? // minimum order in cents
+  maxUses         Int? // null = unlimited
+  usedCount       Int             @default(0)
+
+  // Validity
+  active          Boolean         @default(true)
+  startsAt        DateTime?
+  expiresAt       DateTime?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([code])
+  @@index([active])
+}
+
+model OrderDiscount {
+  id              String    @id @default(cuid())
+  orderId         String
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  discountId      String?
+  code            String
+  type            DiscountType
+  value           Int
+  scope           DiscountScope
+  discountAmount  Int // actual amount discounted in cents
+
+  createdAt       DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([code])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+enum DiscountScope {
+  PRODUCT
+  ORDER
+  GLOBAL
+}

@@ -159,7 +159,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         {/* Back Button */}
         <Link
           href="/shop"
-          className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 font-medium"
+          className="inline-flex items-center gap-2 text-temple-red hover:text-red-900 transition-colors mb-8 font-medium"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Shop
@@ -184,7 +184,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <div className="mt-8">
           <Link
             href="/shop"
-            className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="inline-block bg-temple-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-900 transition-colors"
           >
             Browse All Products
           </Link>
@@ -202,7 +202,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         {/* Back Button */}
         <Link
           href="/shop"
-          className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 font-medium"
+          className="inline-flex items-center gap-2 text-temple-red hover:text-red-900 transition-colors mb-8 font-medium"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Shop
@@ -227,7 +227,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <div className="mt-8">
           <Link
             href="/shop"
-            className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="inline-block bg-temple-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-900 transition-colors"
           >
             Browse All Products
           </Link>
@@ -255,7 +255,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         {/* Back Button */}
         <Link
           href="/shop"
-          className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8 font-medium"
+          className="inline-flex items-center gap-2 text-temple-red hover:text-red-900 transition-colors mb-8 font-medium"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Shop
@@ -266,7 +266,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           {/* Product Image */}
           <div>
             {imageUrl ? (
-              <div className="relative w-full h-96 rounded-xl overflow-hidden bg-background dark:bg-gray-800 border-2 border-primary/5">
+              <div className="relative w-full h-96 rounded-xl overflow-hidden bg-stone-50 dark:bg-gray-800 border-2 border-temple-red/10">
                 <Image
                   src={imageUrl}
                   alt={product.title}
@@ -277,10 +277,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 />
               </div>
             ) : (
-              <div className="w-full h-96 rounded-xl overflow-hidden bg-background dark:bg-gray-800 border-2 border-primary/5 flex items-center justify-center">
+              <div className="w-full h-96 rounded-xl overflow-hidden bg-stone-50 dark:bg-gray-800 border-2 border-temple-red/10 flex items-center justify-center">
                 <div className="text-center">
-                  <ShoppingBag className="w-16 h-16 text-primary/30 mx-auto mb-4" />
-                  <p className="text-text-secondary text-sm">No image available</p>
+                  <ShoppingBag className="w-16 h-16 text-temple-red/30 mx-auto mb-4" />
+                  <p className="text-stone-500 text-sm">No image available</p>
                 </div>
               </div>
             )}
@@ -289,13 +289,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           {/* Product Information */}
           <div className="flex flex-col">
             {/* Title */}
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-4">
+            <h1 className="font-display text-4xl md:text-5xl font-bold text-text-temple-red mb-4">
               {product.title}
             </h1>
 
             {/* Subtitle */}
             {product.subtitle && (
-              <p className="text-xl text-text-secondary font-serif mb-6">{product.subtitle}</p>
+              <p className="text-xl text-stone-500 font-serif mb-6">{product.subtitle}</p>
             )}
 
             {/* Vendor Attribution */}
@@ -304,35 +304,35 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             {/* Description */}
             {product.description && (
               <div className="mb-8">
-                <h2 className="font-serif text-xl font-semibold text-text-primary mb-3">
+                <h2 className="font-serif text-xl font-semibold text-text-temple-red mb-3">
                   Description
                 </h2>
-                <p className="text-text-secondary leading-relaxed">{product.description}</p>
+                <p className="text-stone-500 leading-relaxed">{product.description}</p>
               </div>
             )}
 
             {/* Options/Variants */}
             {product.options && product.options.length > 0 && (
               <div className="mb-8">
-                <h2 className="font-serif text-xl font-semibold text-text-primary mb-4">
+                <h2 className="font-serif text-xl font-semibold text-text-temple-red mb-4">
                   Available Options
                 </h2>
                 <div className="space-y-4">
                   {product.options.map((option) => (
                     <div key={option.id}>
-                      <h3 className="font-medium text-text-primary mb-2">{option.title}</h3>
+                      <h3 className="font-medium text-text-temple-red mb-2">{option.title}</h3>
                       <div className="flex flex-wrap gap-2">
                         {option.values && option.values.length > 0 ? (
                           option.values.map((value) => (
                             <span
                               key={value.id}
-                              className="px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium text-sm dark:bg-primary/20"
+                              className="px-3 py-2 rounded-lg bg-temple-red/10 text-temple-red font-medium text-sm dark:bg-temple-red/20"
                             >
                               {value.value}
                             </span>
                           ))
                         ) : (
-                          <span className="text-text-secondary text-sm">No options available</span>
+                          <span className="text-stone-500 text-sm">No options available</span>
                         )}
                       </div>
                     </div>
@@ -343,9 +343,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
             {/* Variants Count */}
             {product.variants && product.variants.length > 0 && (
-              <div className="mb-8 p-4 bg-background rounded-lg border border-primary/10 dark:bg-gray-800">
-                <p className="text-text-secondary">
-                  <span className="font-medium text-text-primary">
+              <div className="mb-8 p-4 bg-stone-50 rounded-lg border border-temple-red/10 dark:bg-gray-800">
+                <p className="text-stone-500">
+                  <span className="font-medium text-text-temple-red">
                     {product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}
                   </span>{" "}
                   available
@@ -359,7 +359,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             {/* Contact Link */}
             <Link
               href="/about/contact"
-              className="mt-6 inline-block text-primary hover:text-primary/80 font-medium transition-colors"
+              className="mt-6 inline-block text-temple-red hover:text-red-900 font-medium transition-colors"
             >
               Have questions? Contact us →
             </Link>
@@ -368,12 +368,12 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
         {/* Related Products Placeholder */}
         <div className="border-t border-border pt-12">
-          <h2 className="font-serif text-3xl font-semibold text-text-primary mb-6">
+          <h2 className="font-serif text-3xl font-semibold text-text-temple-red mb-6">
             More Products
           </h2>
           <Link
             href="/shop"
-            className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="inline-block bg-temple-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-900 transition-colors"
           >
             Browse All Products
           </Link>

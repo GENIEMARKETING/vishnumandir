@@ -26,6 +26,12 @@
     "level": {
       "type": "enumeration",
       "enum": ["Info", "High-Priority"]
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
     }
   }
 }

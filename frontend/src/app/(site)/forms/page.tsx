@@ -1,168 +1,134 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Sparkles, Building2, FileText, MapPin, Mail, ClipboardList, ArrowRight } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
-import { FileText, Sparkles, Building, Receipt, Mail, MapPin, MoreHorizontal } from "lucide-react";
+import { PageHero } from "@/components/shared/PageHero";
+import { GeneralAnimations } from "@/components/animations/GeneralAnimations";
 
 export const metadata: Metadata = {
-  title: "Forms | Vishnu Mandir, Tampa - Puja Sponsorships, Facility Requests & More",
+  title: "Forms | Vishnu Mandir, Tampa - Submit Requests & Applications",
   description:
-    "Access all temple forms at Vishnu Mandir, Tampa including puja sponsorships, facility rental requests, donation statements, and contact updates.",
-  keywords: [
-    "Vishnu Mandir forms",
-    "puja sponsorship form",
-    "temple facility rental",
-    "donation statement request",
-    "Tampa temple forms",
-  ],
+    "Access all temple forms including puja sponsorships, facility rental, donation statements, address changes, and email subscriptions.",
   openGraph: {
     title: "Forms | Vishnu Mandir, Tampa",
-    description: "Access all temple forms including puja sponsorships, facility requests, and more.",
+    description: "Submit requests and forms to Vishnu Mandir, Tampa.",
     type: "website",
   },
 };
 
-/**
- * Forms section hub page.
- * @returns {JSX.Element} The rendered forms hub page
- */
-export default function FormsPage() {
+const forms = [
+  {
+    icon: <Sparkles size={28} />,
+    title: "Puja Sponsorship",
+    desc: "Sponsor a puja service for your family's well-being, special occasions, or in honor of a loved one.",
+    href: "/forms/puja-sponsorships",
+    cta: "Sponsor a Puja",
+    highlight: true,
+  },
+  {
+    icon: <Building2 size={28} />,
+    title: "Facility Rental",
+    desc: "Request the use of temple facilities for community events, gatherings, and special occasions.",
+    href: "/forms/request-facility",
+    cta: "Request Facility",
+    highlight: false,
+  },
+  {
+    icon: <FileText size={28} />,
+    title: "Donation Statement",
+    desc: "Request an official tax-deductible donation statement for your charitable contributions to the temple.",
+    href: "/forms/donation-statement",
+    cta: "Request Statement",
+    highlight: false,
+  },
+  {
+    icon: <MapPin size={28} />,
+    title: "Change of Address",
+    desc: "Update your contact information including home address, phone number, or email to stay connected.",
+    href: "/forms/change-of-address",
+    cta: "Update Address",
+    highlight: false,
+  },
+  {
+    icon: <Mail size={28} />,
+    title: "Email Subscription",
+    desc: "Subscribe or manage your newsletter preferences to receive temple updates and event announcements.",
+    href: "/forms/email-subscription",
+    cta: "Manage Subscription",
+    highlight: false,
+  },
+  {
+    icon: <ClipboardList size={28} />,
+    title: "Other Requests",
+    desc: "All other forms, special requests, general inquiries, and additional temple service requests.",
+    href: "/forms/all-other-forms",
+    cta: "View Other Forms",
+    highlight: false,
+  },
+];
+
+export default function FormsHubPage() {
   const structuredData = generateWebPageSchema({
     name: "Forms",
-    description:
-      "Temple forms and requests at Vishnu Mandir, Tampa",
+    description: "All temple forms and requests at Vishnu Mandir, Tampa",
     url: "/forms",
   });
 
-  const forms = [
-    {
-      name: "Puja Sponsorships",
-      description: "Sponsor a puja for your family or special occasion",
-      href: "/forms/puja-sponsorships",
-      icon: Sparkles,
-    },
-    {
-      name: "Request Facility",
-      description: "Request facility rental for your event or occasion",
-      href: "/forms/request-facility",
-      icon: Building,
-    },
-    {
-      name: "Donation Statement",
-      description: "Request donation statements for tax purposes",
-      href: "/forms/donation-statement",
-      icon: Receipt,
-    },
-    {
-      name: "Change of Address",
-      description: "Update your contact information with the temple",
-      href: "/forms/change-of-address",
-      icon: MapPin,
-    },
-    {
-      name: "Email Subscription",
-      description: "Manage email subscriptions for newsletters and updates",
-      href: "/forms/email-subscription",
-      icon: Mail,
-    },
-    {
-      name: "All Other Forms",
-      description: "Additional forms and requests",
-      href: "/forms/all-other-forms",
-      icon: MoreHorizontal,
-    },
-  ];
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <GeneralAnimations />
+
+      <PageHero
+        tagline="Submit a Request"
+        title="Forms & Requests"
+        subtitle="Everything you need to connect with us — from puja sponsorships to facility rentals, all in one place."
+        patternId="forms-pat"
       />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-6">
-          Temple Forms
-        </h1>
-        <p className="text-xl text-text-secondary mb-8 font-serif">
-          Access all temple forms including puja sponsorships, facility requests,
-          and more.
-        </p>
 
-        {/* Introduction */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-12">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-primary/10 rounded-full text-primary">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-                Easy Online Forms
-              </h2>
-              <p className="text-text-secondary leading-relaxed mb-4">
-                Vishnu Mandir, Tampa provides convenient online forms to help you
-                interact with the temple easily. Whether you want to sponsor a
-                puja, request facility rental, update your contact information, or
-                access donation statements, our forms make it simple.
-              </p>
-              <p className="text-text-secondary leading-relaxed">
-                All forms are secure and your information is handled with
-                confidentiality. After submission, you'll receive confirmation and
-                our team will process your request promptly.
-              </p>
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-16 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-2">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Available Forms</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
             </div>
           </div>
-        </section>
 
-        {/* Forms Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {forms.map((form, index) => {
-            const Icon = form.icon;
-            return (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {forms.map((form, i) => (
               <Link
-                key={index}
+                key={i}
                 href={form.href}
-                className="group bg-white rounded-xl shadow-md p-6 border-2 border-border hover:border-primary/30 transition-all duration-300"
+                data-gsap="card"
+                className={`group rounded-3xl border p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 opacity-0 flex flex-col ${
+                  form.highlight
+                    ? "bg-temple-red border-temple-red text-white"
+                    : "bg-white border-stone-100 shadow-sm hover:border-temple-red/20"
+                }`}
               >
-                <div className="p-3 bg-primary/10 rounded-lg text-primary w-fit mb-4 group-hover:scale-110 transition-transform">
-                  <Icon className="w-6 h-6" />
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 ${
+                  form.highlight
+                    ? "bg-white/20 text-white"
+                    : "bg-temple-red/10 text-temple-red group-hover:bg-temple-red group-hover:text-white"
+                }`}>
+                  {form.icon}
                 </div>
-                <h2 className="font-serif text-2xl font-semibold text-text-primary mb-2 group-hover:text-primary transition-colors">
-                  {form.name}
-                </h2>
-                <p className="text-text-secondary mb-4">{form.description}</p>
-                <span className="text-primary font-medium group-hover:underline">
-                  Access Form →
-                </span>
+                <h3 className={`font-serif text-xl font-bold mb-3 ${form.highlight ? "text-white" : "text-stone-800 group-hover:text-temple-red transition-colors"}`}>
+                  {form.title}
+                </h3>
+                <p className={`text-sm leading-relaxed mb-6 flex-1 ${form.highlight ? "text-stone-200" : "text-stone-500"}`}>
+                  {form.desc}
+                </p>
+                <div className={`flex items-center gap-2 font-semibold text-sm ${form.highlight ? "text-temple-gold" : "text-temple-red"}`}>
+                  {form.cta} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               </Link>
-            );
-          })}
-        </div>
-
-        {/* Additional Information */}
-        <section className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-8 border-2 border-primary/5">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Need Help?
-          </h2>
-          <p className="text-text-secondary leading-relaxed mb-6">
-            If you have questions about any form or need assistance with
-            submission, please don't hesitate to contact us. We're here to help
-            make the process as smooth as possible.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/about/contact"
-              className="inline-block px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors text-center"
-            >
-              Contact Us
-            </Link>
-            <a
-              href="tel:+18132697262"
-              className="inline-block px-6 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors text-center"
-            >
-              Call (813) 269-7262
-            </a>
+            ))}
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
     </>
   );
 }

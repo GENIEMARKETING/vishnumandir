@@ -1,240 +1,94 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Calendar, Clock, MapPin, ArrowRight, Info } from "lucide-react";
 import { generateWebPageSchema } from "@/lib/seo";
-import { Calendar, Users } from "lucide-react";
 import { fetchEvents } from "@/lib/strapi";
-import { EventList } from "@/components/shared/EventList";
+import { EventCard } from "@/components/shared/EventCard";
 import { isFutureEvent } from "@/lib/strapi-utils";
+import { PageHero } from "@/components/shared/PageHero";
+import { GeneralAnimations } from "@/components/animations/GeneralAnimations";
 
 export const metadata: Metadata = {
-  title: "Educational Events | Vishnu Mandir, Tampa - Workshops & Seminars",
+  title: "Events & Workshops | Vishnu Mandir, Tampa - Educational Programs",
   description:
-    "Discover educational events, workshops, and seminars at Vishnu Mandir, Tampa. Join guest lectures, special workshops, and learning sessions.",
-  keywords: [
-    "Hindu education events Tampa",
-    "temple workshops",
-    "educational seminars",
-    "Tampa temple events",
-  ],
+    "Discover educational events, workshops, and seminars at Vishnu Mandir, Tampa. Guest lectures, special workshops, and learning sessions for all ages.",
   openGraph: {
-    title: "Educational Events | Vishnu Mandir, Tampa",
-    description: "Educational events, workshops, and seminars for all ages.",
+    title: "Events & Workshops | Vishnu Mandir, Tampa",
+    description: "Educational events and workshops at Vishnu Mandir, Tampa.",
     type: "website",
   },
 };
 
-// ISR revalidation: 5 minutes
 export const revalidate = 300;
 
-/**
- * Education Events page - Educational events and workshops.
- * @returns {JSX.Element} The rendered education events page
- */
 export default async function EducationEventsPage() {
-  // Fetch educational events
-  const allEvents = await fetchEvents({
-    category: "Educational",
-    publishedAt: true,
-    sort: "date:asc",
-  });
-
-  // Filter out items with missing attributes
-  const validEvents = allEvents.filter((event) => event?.attributes);
-
-  // Filter for future events only
-  const futureEvents = validEvents.filter((event) => {
-    // Guard against undefined date/startTime
-    if (!event.attributes.date || !event.attributes.startTime) {
-      return false;
-    }
-    return isFutureEvent(event.attributes.date, event.attributes.startTime);
-  });
-
-  // Production-safe logging with detailed filtering analysis
-  if (process.env.DEBUG_EVENT_FILTERING === "true" || process.env.NODE_ENV === "development") {
-    const filteredOutByCategory = allEvents.filter((event) => event?.attributes?.category !== "Educational");
-    const filteredOutByDate = validEvents.filter((event) => {
-      if (!event.attributes.date || !event.attributes.startTime) {
-        return true;
-      }
-      return !isFutureEvent(event.attributes.date, event.attributes.startTime);
-    });
-
-    console.log("[education/events] Detailed event filtering analysis:", {
-      timestamp: new Date().toISOString(),
-      step1_apiFetch: {
-        total: allEvents.length,
-        description: "Total events fetched from API (all categories)",
-      },
-      step2_categoryFilter: {
-        totalWithEducationalCategory: validEvents.length,
-        filteredOutByCategoryMismatch: filteredOutByCategory.length,
-        description: "Filtered to only 'Educational' category events",
-      },
-      step3_dateTimeFilter: {
-        futureEventsDisplayed: futureEvents.length,
-        filteredOutByPastDateTime: filteredOutByDate.filter((e) => e.attributes.date && e.attributes.startTime).length,
-        filteredOutByMissingDateTime: filteredOutByDate.filter((e) => !e.attributes.date || !e.attributes.startTime).length,
-        description: "Filtered to only future date/time events",
-      },
-      sampleFilteredOutEvents: [
-        ...filteredOutByCategory.slice(0, 1).map((e) => ({
-          title: e?.attributes?.title,
-          category: e?.attributes?.category,
-          reason: `Wrong category (${e?.attributes?.category} != Educational)`,
-        })),
-        ...filteredOutByDate.slice(0, 2).map((event) => ({
-          title: event?.attributes?.title,
-          date: event?.attributes?.date,
-          startTime: event?.attributes?.startTime,
-          reason:
-            !event?.attributes?.date || !event?.attributes?.startTime
-              ? "Missing date or startTime"
-              : "Date/time is in the past",
-        })),
-      ],
-    });
-  }
-
   const structuredData = generateWebPageSchema({
-    name: "Educational Events",
-    description:
-      "Educational events and workshops at Vishnu Mandir, Tampa",
+    name: "Events & Workshops",
+    description: "Educational events and workshops at Vishnu Mandir, Tampa",
     url: "/education/events",
+  });
+
+  const allEvents = await fetchEvents({ publishedAt: true, sort: "date:asc" });
+  const validEvents = allEvents.filter((e) => e?.attributes);
+  const futureEvents = validEvents.filter((e) => {
+    if (!e.attributes.date || !e.attributes.startTime) return false;
+    return isFutureEvent(e.attributes.date, e.attributes.startTime);
   });
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <GeneralAnimations />
+
+      <PageHero
+        tagline="Workshops & Seminars"
+        title="Events & Workshops"
+        subtitle="Guest lectures, special workshops, and learning sessions that enrich our community's spiritual and cultural knowledge."
+        patternId="edu-events-pat"
       />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-6">
-          Educational Events
-        </h1>
-        <p className="text-xl text-text-secondary mb-8 font-serif">
-          Discover upcoming educational events, workshops, and seminars.
-        </p>
 
-        {/* Introduction */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-12">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-primary/10 rounded-full text-primary">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-                Learning Through Events
-              </h2>
-              <p className="text-text-secondary leading-relaxed mb-4">
-                Vishnu Mandir, Tampa regularly hosts educational events,
-                workshops, and seminars to enhance learning and community
-                engagement. These events provide opportunities to explore Hindu
-                philosophy, culture, and practices in depth.
-              </p>
-              <p className="text-text-secondary leading-relaxed">
-                Our educational events include guest lectures by scholars,
-                interactive workshops, study groups, youth programs, and special
-                learning sessions. Events are typically open to all community
-                members and are designed to be accessible and engaging.
-              </p>
+      {/* ── EVENTS GRID ───────────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div data-gsap="section-heading" className="text-center mb-16 opacity-0">
+            <div className="inline-flex items-center gap-4 mb-2">
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
+              <h2 className="font-display text-4xl text-temple-red uppercase tracking-widest">Upcoming Events</h2>
+              <div data-gsap="gold-line" data-width="48px" className="h-px bg-temple-gold opacity-0" style={{ width: 0 }} />
             </div>
           </div>
-        </section>
 
-        {/* Events List */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-8">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-6">
-            Upcoming Educational Events
-          </h2>
-          <EventList
-            events={futureEvents}
-            emptyMessage="Educational events will be listed here. Check back soon for upcoming workshops, seminars, and learning sessions."
-          />
-        </section>
-
-        {/* Event Types */}
-        <section className="bg-white rounded-xl p-8 border-2 border-primary/5 shadow-warm mb-8">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Types of Educational Events
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Users className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-text-primary">
-                  Guest Lectures
-                </h3>
-              </div>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Learn from visiting scholars, spiritual leaders, and experts who
-                share insights on Hindu philosophy, scriptures, and practices.
-              </p>
+          {futureEvents.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {futureEvents.map((event, i) => (
+                <div key={event.id} data-gsap="card" className="opacity-0">
+                  <EventCard event={event} showDescription />
+                </div>
+              ))}
             </div>
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Calendar className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-text-primary">Workshops</h3>
+          ) : (
+            <div data-gsap="fade-up" className="max-w-xl mx-auto text-center opacity-0">
+              <div className="bg-stone-50 rounded-3xl p-12 border border-stone-100">
+                <div className="w-16 h-16 bg-temple-gold/10 rounded-2xl flex items-center justify-center text-temple-gold mx-auto mb-6">
+                  <Info size={28} />
+                </div>
+                <h3 className="font-serif text-2xl font-bold text-stone-800 mb-3">No Upcoming Events</h3>
+                <p className="text-stone-500 leading-relaxed mb-8">
+                  Check back soon for upcoming educational workshops and seminars, or subscribe to our newsletter to get notified.
+                </p>
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <Link href="/calendar/current-events" className="inline-flex items-center gap-2 bg-temple-red text-white px-6 py-3 rounded-full font-semibold hover:bg-red-900 transition-all shadow-md">
+                    <Calendar size={16} /> All Events
+                  </Link>
+                  <Link href="/calendar/newsletter" className="inline-flex items-center gap-2 border-2 border-temple-red text-temple-red px-6 py-3 rounded-full font-semibold hover:bg-temple-red hover:text-white transition-all">
+                    Subscribe <ArrowRight size={16} />
+                  </Link>
+                </div>
               </div>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Interactive workshops on topics such as meditation, yoga,
-                scripture study, and cultural practices.
-              </p>
             </div>
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Users className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-text-primary">Study Groups</h3>
-              </div>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Regular study groups for reading and discussing Hindu scriptures
-                and philosophical texts.
-              </p>
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Calendar className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-text-primary">Youth Programs</h3>
-              </div>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Special educational programs designed for children and youth to
-                learn about their heritage in engaging ways.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Stay Updated */}
-        <section className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-8 border-2 border-primary/5">
-          <h2 className="font-serif text-2xl font-semibold text-text-primary mb-4">
-            Stay Informed
-          </h2>
-          <p className="text-text-secondary leading-relaxed mb-6">
-            To stay updated on educational events:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4 mb-6">
-            <li>Check our calendar for upcoming events</li>
-            <li>Subscribe to our newsletter for event announcements</li>
-            <li>Contact us at (813) 269-7262 for specific event information</li>
-            <li>Visit the temple for posted event schedules</li>
-          </ul>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/calendar"
-              className="inline-block px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors text-center"
-            >
-              View Calendar
-            </Link>
-            <Link
-              href="/calendar/newsletter"
-              className="inline-block px-6 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors text-center"
-            >
-              Subscribe to Newsletter
-            </Link>
-          </div>
-        </section>
-      </main>
+          )}
+        </div>
+      </section>
     </>
   );
 }

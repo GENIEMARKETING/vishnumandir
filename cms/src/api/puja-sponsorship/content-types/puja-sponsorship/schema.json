@@ -44,7 +44,7 @@
     "attachmentUrl": {
       "type": "string"
     },
-    "status": {
+    "approvalStatus": {
       "type": "enumeration",
       "enum": ["pending", "confirmed", "completed"],
       "default": "pending",

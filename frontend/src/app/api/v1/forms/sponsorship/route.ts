@@ -1,92 +1,83 @@
 import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-responses";
+import { strapiCreate, generateTransactionId } from "@/lib/strapi-submit";
+import { sendPujaConfirmation, sendAdminNotification } from "@/lib/email";
 
-/**
- * POST /api/v1/forms/sponsorship
- * Proxy endpoint that forwards puja sponsorship form submissions to the backend.
- * Accepts multipart/form-data with optional file attachment.
- */
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY;
-
-    // Validate required environment variables
-    if (!backendUrl) {
-      console.error("[api/v1/forms/sponsorship] NEXT_PUBLIC_API_URL not configured");
-      return errorResponse(
-        "Backend API URL not configured. Contact administrator.",
-        500
-      );
-    }
-
-    if (!apiKey) {
-      console.error("[api/v1/forms/sponsorship] NEXT_PUBLIC_API_KEY not configured");
-      return errorResponse("API key not configured", 500);
-    }
-
-    // Get the original Content-Type header (includes boundary for multipart)
     const contentType = request.headers.get("content-type") || "";
-    const isMultipart = contentType.includes("multipart/form-data");
+    let fields: Record<string, string> = {};
 
-    // Preserve multipart boundaries by forwarding body as ArrayBuffer
-    const body = await request.arrayBuffer();
-
-    const headers: HeadersInit = {
-      "x-api-key": apiKey,
-    };
-
-    // Preserve original Content-Type for multipart (includes boundary parameter)
-    if (isMultipart && contentType) {
-      headers["Content-Type"] = contentType;
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      formData.forEach((value, key) => {
+        if (typeof value === "string") fields[key] = value;
+      });
+    } else {
+      fields = await request.json().catch(() => ({}));
     }
 
-    // Forward the request to the backend
-    const response = await fetch(`${backendUrl}/api/v1/forms/sponsorship`, {
-      method: "POST",
-      headers,
-      body,
+    if (!fields.devoteeName && !fields.sponsorName)
+      return errorResponse("Devotee name is required", 400);
+    if (!fields.email)
+      return errorResponse("Email address is required", 400);
+
+    const transactionId = generateTransactionId();
+    const sponsorName = fields.devoteeName || fields.sponsorName;
+    const pujaType = fields.pujaId || "General Puja";
+    const date = fields.sponsorshipDate
+      ? new Date(fields.sponsorshipDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+      : "To be confirmed";
+
+    const result = await strapiCreate("puja-sponsorships", {
+      pujaId: pujaType,
+      pujaServiceName: pujaType,
+      sponsorName,
+      sponsorEmail: fields.email,
+      sponsorPhone: fields.phone || null,
+      requestedDate: fields.sponsorshipDate
+        ? new Date(fields.sponsorshipDate).toISOString()
+        : new Date().toISOString(),
+      location: fields.location || "At Temple",
+      notes: [fields.specialInstructions, fields.notes].filter(Boolean).join("\n\n") || null,
+      approvalStatus: "pending",
+      transactionId,
     });
 
-    // Check Content-Type before parsing
-    const responseContentType = response.headers.get("content-type") || "";
-    const isJson = responseContentType.includes("application/json");
+    if (!result.ok)
+      return errorResponse("Unable to submit request. Please try again or call (813) 269-7262.", 500);
 
-    let data: any;
-    if (isJson) {
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        // If JSON parsing fails, read as text for error message
-        const text = await response.text();
-        console.error("[api/v1/forms/sponsorship] Failed to parse JSON response:", text.substring(0, 200));
-        return errorResponse(
-          `Backend returned invalid response: ${text.substring(0, 100)}`,
-          response.status
-        );
-      }
-    } else {
-      // Non-JSON response (likely HTML error page)
-      const text = await response.text();
-      console.error("[api/v1/forms/sponsorship] Backend returned non-JSON:", text.substring(0, 200));
-      return errorResponse(
-        `Backend error: ${response.status} ${response.statusText}. ${text.substring(0, 100)}`,
-        response.status
-      );
-    }
+    // Send emails (non-blocking — don't fail the request if email fails)
+    await Promise.allSettled([
+      sendPujaConfirmation({
+        to: fields.email,
+        name: sponsorName,
+        pujaType,
+        date,
+        location: fields.location || "At Temple",
+        transactionId,
+      }),
+      sendAdminNotification({
+        formType: "Puja Sponsorship",
+        submitterName: sponsorName,
+        submitterEmail: fields.email,
+        details: {
+          "Puja Type": pujaType,
+          "Requested Date": date,
+          "Phone": fields.phone || null,
+          "Location": fields.location || "At Temple",
+          "Notes": fields.specialInstructions || fields.notes || null,
+        },
+        transactionId,
+      }),
+    ]);
 
-    if (!response.ok) {
-      return errorResponse(
-        data?.error || data?.message || "Backend request failed",
-        response.status,
-        data?.errors
-      );
-    }
-
-    return successResponse(data.data || data, response.status);
-  } catch (error) {
-    console.error("[api/v1/forms/sponsorship]", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return errorResponse(message, 500);
+    return successResponse({
+      message: "Puja sponsorship request submitted! A confirmation email has been sent to your inbox.",
+      transactionId,
+    }, 201);
+  } catch (err) {
+    console.error("[api/v1/forms/sponsorship]", err);
+    return errorResponse("Internal server error", 500);
   }
 }

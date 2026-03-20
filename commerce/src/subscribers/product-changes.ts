@@ -4,7 +4,6 @@ interface ProductEventData {
   id: string;
   title: string;
   handle: string;
-  tags?: Array<{ value: string }>;
 }
 
 /**
@@ -33,8 +32,6 @@ export default async function handleProductChanges({
         product_id: data.id,
         product_title: data.title,
         product_handle: data.handle,
-        vendor_tags:
-          data.tags?.filter((t) => t.value.startsWith("vendor:")) || [],
       },
       timestamp: new Date().toISOString(),
     };

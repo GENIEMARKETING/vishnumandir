@@ -12,6 +12,7 @@ import type {
   StrapiAnnouncement,
   StrapiNewsletter,
   StrapiPage,
+  StrapiBoardMember,
 } from "@/types/strapi";
 
 /**
@@ -527,4 +528,23 @@ export async function fetchPageBySlug(
 
   // Normalize Strapi v5 flat response to v4-like structure
   return normalizeToV4<StrapiPage>(response.data[0]);
+}
+
+/**
+ * Fetch board members from Strapi, sorted by tier then displayOrder.
+ * Tier priority: President → Executive → Director
+ * @returns Promise with array of StrapiBoardMember
+ */
+export async function fetchBoardMembers(): Promise<StrapiBoardMember[]> {
+  const response = await fetchStrapiContent<
+    StrapiCollectionResponse<Record<string, unknown>>
+  >("board-members", {
+    sort: "displayOrder:asc",
+  });
+
+  if (!response || !response.data) {
+    return [];
+  }
+
+  return normalizeArrayToV4<StrapiBoardMember>(response.data);
 }

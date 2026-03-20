@@ -1,93 +1,73 @@
 import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-responses";
+import { strapiCreate, generateTransactionId } from "@/lib/strapi-submit";
+import { sendFacilityConfirmation, sendAdminNotification } from "@/lib/email";
 
-/**
- * POST /api/v1/forms/facility-request
- * Proxy endpoint that forwards facility request form submissions to the backend.
- */
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+    const body = await request.json().catch(() => ({}));
 
-    // Validate required environment variables
-    if (!backendUrl) {
-      console.error("[api/v1/forms/facility-request] NEXT_PUBLIC_API_URL not configured");
-      return errorResponse(
-        "Backend API URL not configured. Contact administrator.",
-        500
-      );
-    }
+    if (!body.contactName)    return errorResponse("Contact name is required", 400);
+    if (!body.email)          return errorResponse("Email is required", 400);
+    if (!body.phone)          return errorResponse("Phone number is required", 400);
+    if (!body.eventType)      return errorResponse("Event type is required", 400);
+    if (!body.requestedDate)  return errorResponse("Event date is required", 400);
+    if (!body.numberOfGuests) return errorResponse("Number of guests is required", 400);
 
-    if (!apiKey) {
-      console.error("[api/v1/forms/facility-request] NEXT_PUBLIC_API_KEY not configured");
-      return errorResponse("API key not configured", 500);
-    }
+    const transactionId = generateTransactionId();
+    const date = new Date(body.requestedDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
-    // Get the original Content-Type header
-    const contentType = request.headers.get("content-type") || "";
-    const isMultipart = contentType.includes("multipart/form-data");
-
-    // Preserve request body and content type
-    const body = await request.arrayBuffer();
-
-    const headers: HeadersInit = {
-      "x-api-key": apiKey,
-    };
-
-    // Preserve original Content-Type for multipart
-    if (isMultipart && contentType) {
-      headers["Content-Type"] = contentType;
-    } else {
-      headers["Content-Type"] = "application/json";
-    }
-
-    // Forward the request to the backend
-    const response = await fetch(`${backendUrl}/api/v1/forms/facility-request`, {
-      method: "POST",
-      headers,
-      body,
+    const result = await strapiCreate("facility-requests", {
+      requesterName: body.contactName,
+      requesterEmail: body.email,
+      requesterPhone: body.phone,
+      eventType: body.eventType,
+      eventName: body.eventName || null,
+      eventDate: new Date(body.requestedDate).toISOString(),
+      startTime: body.startTime || null,
+      endTime: body.endTime || null,
+      numberOfGuests: Number(body.numberOfGuests),
+      details: body.details || null,
+      requirements: body.requirements || null,
+      approvalStatus: "pending",
+      transactionId,
     });
 
-    // Check Content-Type before parsing
-    const responseContentType = response.headers.get("content-type") || "";
-    const isJson = responseContentType.includes("application/json");
+    if (!result.ok)
+      return errorResponse("Unable to submit request. Please call (813) 269-7262.", 500);
 
-    let data: any;
-    if (isJson) {
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        // If JSON parsing fails, read as text for error message
-        const text = await response.text();
-        console.error("[api/v1/forms/facility-request] Failed to parse JSON response:", text.substring(0, 200));
-        return errorResponse(
-          `Backend returned invalid response: ${text.substring(0, 100)}`,
-          response.status
-        );
-      }
-    } else {
-      // Non-JSON response (likely HTML error page)
-      const text = await response.text();
-      console.error("[api/v1/forms/facility-request] Backend returned non-JSON:", text.substring(0, 200));
-      return errorResponse(
-        `Backend error: ${response.status} ${response.statusText}. ${text.substring(0, 100)}`,
-        response.status
-      );
-    }
+    await Promise.allSettled([
+      sendFacilityConfirmation({
+        to: body.email,
+        name: body.contactName,
+        eventType: body.eventType,
+        date,
+        guests: Number(body.numberOfGuests),
+        transactionId,
+      }),
+      sendAdminNotification({
+        formType: "Facility Request",
+        submitterName: body.contactName,
+        submitterEmail: body.email,
+        details: {
+          "Event Type": body.eventType,
+          "Event Name": body.eventName || null,
+          "Requested Date": date,
+          "Start Time": body.startTime || null,
+          "End Time": body.endTime || null,
+          "Guests": String(body.numberOfGuests),
+          "Details": body.details || null,
+        },
+        transactionId,
+      }),
+    ]);
 
-    if (!response.ok) {
-      return errorResponse(
-        data?.error || data?.message || "Backend request failed",
-        response.status,
-        data?.errors
-      );
-    }
-
-    return successResponse(data.data || data, response.status);
-  } catch (error) {
-    console.error("[api/v1/forms/facility-request]", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return errorResponse(message, 500);
+    return successResponse({
+      message: "Facility request submitted! A confirmation email has been sent. We will contact you within 2 business days.",
+      transactionId,
+    }, 201);
+  } catch (err) {
+    console.error("[api/v1/forms/facility-request]", err);
+    return errorResponse("Internal server error", 500);
   }
 }
