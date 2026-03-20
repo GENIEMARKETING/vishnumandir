@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24.acacia",
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-02-24.acacia",
+  });
+}
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 /**
  * POST /api/webhooks/stripe
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
@@ -268,7 +272,7 @@ async function sendOrderConfirmationEmail({
     </html>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.SENDER_EMAIL_ADDRESS || "no-reply@vishnumandirtampa.com",
     to: email,
     subject: "Order Confirmation - Vishnu Mandir, Tampa",
