@@ -22,7 +22,7 @@ export async function GET() {
     };
 
     // Test backend connectivity if API URL is set
-    let backendTest = {
+    const backendTest = {
       success: false,
       reachable: false,
       statusCode: null as number | null,

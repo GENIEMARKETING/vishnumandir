@@ -1,28 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Lato, Cinzel, Playfair_Display } from "next/font/google";
 import "./globals.css";
-
-const lato = Lato({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-lato",
-  display: "swap",
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-cinzel",
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-playfair",
-  display: "swap",
-});
 
 const baseUrl = process.env.NEXT_PUBLIC_URL || "https://vishnumandirtampa.com";
 
@@ -42,10 +20,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${lato.variable} ${cinzel.variable} ${playfair.variable}`}
-    >
+    <html lang="en">
+      <head>
+        {/* Avoid build-time Google Fonts downloads (next/font/google) so builds work in restricted CI/envs. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lato:wght@400;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        />
+      </head>
       <body className="antialiased">
         {children}
         <Script
@@ -54,6 +42,7 @@ export default function RootLayout({
         />
         {/* Initialize Zeffy buttons after script loads */}
         <Script
+          id="zeffy-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `

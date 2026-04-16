@@ -67,18 +67,23 @@ export function getStrapiImageUrl(media: StrapiMedia | undefined): string | null
  * @returns Full URL string or null if no file
  */
 export function getStrapiFileUrl(
-  file: any
+  file: unknown
 ): string | null {
-  if (!file) {
+  if (!file || typeof file !== "object") {
     return null;
   }
 
   const { apiUrl } = getStrapiConfig();
   const baseUrl = apiUrl.replace("/api", "");
 
+  const f = file as {
+    url?: unknown;
+    data?: { attributes?: { url?: unknown } };
+  };
+
   // Strapi v5: flat structure with url directly accessible
-  if ('url' in file && typeof file.url === 'string') {
-    const fileUrl = file.url;
+  if (typeof f.url === "string") {
+    const fileUrl = f.url;
 
     if (fileUrl.startsWith("http")) {
       return fileUrl;
@@ -88,8 +93,8 @@ export function getStrapiFileUrl(
   }
 
   // Strapi v4: nested structure with data.attributes.url
-  if (file?.data?.attributes?.url) {
-    const fileUrl = file.data.attributes.url;
+  if (typeof f.data?.attributes?.url === "string") {
+    const fileUrl = f.data.attributes.url;
 
     if (fileUrl.startsWith("http")) {
       return fileUrl;
@@ -290,7 +295,7 @@ function renderRichTextNode(node: unknown): string {
  * @param event - Strapi event object to validate
  * @returns Object with validation result and detailed error messages
  */
-export function validateEventData(event: any): {
+export function validateEventData(event: unknown): {
   valid: boolean;
   errors: string[];
   warnings: string[];
@@ -299,57 +304,63 @@ export function validateEventData(event: any): {
   const warnings: string[] = [];
 
   // Check required fields
-  if (!event?.attributes) {
+  const e = event as { attributes?: Record<string, unknown> } | null | undefined;
+  if (!e?.attributes) {
     errors.push("Event missing attributes object");
     return { valid: false, errors, warnings };
   }
 
-  const { attributes } = event;
+  const { attributes } = e;
+  const title = typeof attributes.title === "string" ? attributes.title : null;
+  const date = typeof attributes.date === "string" ? attributes.date : null;
+  const startTime = typeof attributes.startTime === "string" ? attributes.startTime : null;
+  const publishedAt = typeof attributes.publishedAt === "string" ? attributes.publishedAt : null;
+  const category = typeof attributes.category === "string" ? attributes.category : null;
 
   // Check required fields
-  if (!attributes.title) {
+  if (!title) {
     errors.push("Missing required field: title");
   }
 
-  if (!attributes.date) {
+  if (!date) {
     errors.push("Missing required field: date");
   } else {
     // Validate date format (should be YYYY-MM-DD or ISO)
     const dateRegex = /^\d{4}-\d{2}-\d{2}/;
-    if (!dateRegex.test(attributes.date)) {
-      errors.push(`Invalid date format: "${attributes.date}" (expected YYYY-MM-DD or ISO format)`);
+    if (!dateRegex.test(date)) {
+      errors.push(`Invalid date format: "${date}" (expected YYYY-MM-DD or ISO format)`);
     }
   }
 
-  if (!attributes.startTime) {
+  if (!startTime) {
     errors.push("Missing required field: startTime");
   } else {
     // Validate time format (should be HH:mm:ss or HH:mm)
     const timeRegex = /^\d{2}:\d{2}(:\d{2})?$/;
-    if (!timeRegex.test(attributes.startTime)) {
-      errors.push(`Invalid time format: "${attributes.startTime}" (expected HH:mm or HH:mm:ss)`);
+    if (!timeRegex.test(startTime)) {
+      errors.push(`Invalid time format: "${startTime}" (expected HH:mm or HH:mm:ss)`);
     }
   }
 
   // Check publishedAt status
-  if (!attributes.publishedAt) {
+  if (!publishedAt) {
     errors.push("Event not published: publishedAt is null or missing");
   }
 
   // Check category for Education page filtering
-  if (!attributes.category) {
+  if (!category) {
     warnings.push("Missing category field (won't appear on filtered event pages)");
-  } else if (!["Religious", "Cultural", "Educational", "Festival"].includes(attributes.category)) {
-    warnings.push(`Unknown category: "${attributes.category}" (expected: Religious, Cultural, Educational, or Festival)`);
+  } else if (!["Religious", "Cultural", "Educational", "Festival"].includes(category)) {
+    warnings.push(`Unknown category: "${category}" (expected: Religious, Cultural, Educational, or Festival)`);
   }
 
   // Check if event time is in the future
-  if (attributes.date && attributes.startTime) {
+  if (date && startTime) {
     try {
-      const eventDate = new Date(`${attributes.date}T${attributes.startTime.padEnd(8, ':00')}`);
+      const eventDate = new Date(`${date}T${startTime.padEnd(8, ":00")}`);
       const now = new Date();
       if (eventDate <= now) {
-        warnings.push(`Event date/time is in the past: ${attributes.date} ${attributes.startTime} (won't display on upcoming events pages)`);
+        warnings.push(`Event date/time is in the past: ${date} ${startTime} (won't display on upcoming events pages)`);
       }
     } catch {
       warnings.push("Could not parse event date/time to check if it's in the future");

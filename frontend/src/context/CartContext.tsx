@@ -82,6 +82,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       try {
         const parsed = JSON.parse(savedCart);
         const totals = calculateTotals(parsed.items || []);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate after mount to avoid SSR/client mismatch
         setState({
           items: parsed.items || [],
           ...totals,

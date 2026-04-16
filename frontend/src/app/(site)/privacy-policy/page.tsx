@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
 
               <section>
                 <h2>1. Introduction</h2>
-                <p>Vishnu Mandir, Tampa (referred to as "we," "us," "our," or "the Temple") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.</p>
+                <p>Vishnu Mandir, Tampa (referred to as &quot;we,&quot; &quot;us,&quot; &quot;our,&quot; or &quot;the Temple&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.</p>
               </section>
 
               <section>

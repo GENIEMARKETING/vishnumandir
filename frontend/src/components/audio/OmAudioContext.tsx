@@ -46,6 +46,7 @@ export function OmAudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate after mount to avoid SSR/client mismatch
     setMutedState(getStoredMuted());
   }, []);
 

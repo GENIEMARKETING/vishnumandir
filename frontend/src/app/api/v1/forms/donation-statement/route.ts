@@ -3,6 +3,8 @@ import { successResponse, errorResponse } from "@/lib/api-responses";
 import { strapiCreate, generateTransactionId } from "@/lib/strapi-submit";
 import { sendFormConfirmation, sendAdminNotification } from "@/lib/email";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -19,8 +21,42 @@ export async function POST(request: NextRequest) {
       transactionId,
     });
 
-    if (!result.ok)
-      return errorResponse("Unable to submit request. Please call (813) 269-7262.", 500);
+    if (!result.ok) {
+      console.error("[api/v1/forms/donation-statement] Strapi create failed:", {
+        transactionId,
+        status: result.status,
+        error: result.error,
+      });
+
+      await Promise.allSettled([
+        sendFormConfirmation({
+          to: body.email,
+          name: body.name,
+          formType: "DONATION_STATEMENT",
+          transactionId,
+        }),
+        sendAdminNotification({
+          formType: "Donation Statement Request (fallback)",
+          submitterName: body.name,
+          submitterEmail: body.email,
+          details: {
+            Period: body.period || null,
+            "Delivery Method": body.delivery || null,
+            "Strapi Error": result.error,
+          },
+          transactionId,
+        }),
+      ]);
+
+      return successResponse(
+        {
+          message:
+            "Donation statement request received! We will send it within 5 business days.",
+          transactionId,
+        },
+        202
+      );
+    }
 
     await Promise.allSettled([
       sendFormConfirmation({ to: body.email, name: body.name, formType: "DONATION_STATEMENT", transactionId }),

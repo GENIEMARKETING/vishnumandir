@@ -3,6 +3,8 @@ import { successResponse, errorResponse } from "@/lib/api-responses";
 import { strapiCreate, generateTransactionId } from "@/lib/strapi-submit";
 import { sendFormConfirmation, sendAdminNotification } from "@/lib/email";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -19,8 +21,45 @@ export async function POST(request: NextRequest) {
       transactionId,
     });
 
-    if (!result.ok)
-      return errorResponse("Unable to update address. Please call (813) 269-7262.", 500);
+    if (!result.ok) {
+      console.error("[api/v1/forms/change-of-address] Strapi create failed:", {
+        transactionId,
+        status: result.status,
+        error: result.error,
+      });
+
+      await Promise.allSettled([
+        sendFormConfirmation({
+          to: body.email,
+          name: body.name,
+          formType: "CHANGE_OF_ADDRESS",
+          transactionId,
+        }),
+        sendAdminNotification({
+          formType: "Change of Address (fallback)",
+          submitterName: body.name,
+          submitterEmail: body.email,
+          details: {
+            "New Address":
+              [body.street, body.city, body.state, body.zip]
+                .filter(Boolean)
+                .join(", ") || null,
+            "New Phone": body.phone || null,
+            "Strapi Error": result.error,
+          },
+          transactionId,
+        }),
+      ]);
+
+      return successResponse(
+        {
+          message:
+            "Address update request received! Your records will be updated within 3 business days.",
+          transactionId,
+        },
+        202
+      );
+    }
 
     await Promise.allSettled([
       sendFormConfirmation({ to: body.email, name: body.name, formType: "CHANGE_OF_ADDRESS", transactionId }),

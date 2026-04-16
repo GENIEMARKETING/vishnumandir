@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* These feed Tailwind fontFamily values in frontend/tailwind.config.ts */
+  --font-lato: "Lato";
+  --font-cinzel: "Cinzel";
+  --font-playfair: "Playfair Display";
+}
+
 @layer base {
   body {
     @apply bg-background text-text-primary font-sans;

@@ -63,7 +63,7 @@ export function generateWebPageSchema({
   datePublished?: string;
   dateModified?: string;
 }) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name,
@@ -178,6 +178,17 @@ export function generatePlaceSchema() {
   };
 }
 
+type WebPageSchemaParams = Parameters<typeof generateWebPageSchema>[0];
+type EventSchemaParams = Parameters<typeof generateEventSchema>[0];
+type ServiceSchemaParams = Parameters<typeof generateServiceSchema>[0];
+
+type StructuredDataParams =
+  | { type: "Organization" }
+  | { type: "Place" }
+  | ({ type: "WebPage" } & WebPageSchemaParams)
+  | ({ type: "Event" } & EventSchemaParams)
+  | ({ type: "Service" } & ServiceSchemaParams);
+
 /**
  * Helper to generate structured data based on type
  * @param {object} params - Parameters for structured data
@@ -185,25 +196,20 @@ export function generatePlaceSchema() {
  * @param {object} params.data - Additional data for the schema
  * @returns {object} JSON-LD structured data
  */
-export function generateStructuredData({
-  type,
-  ...data
-}: {
-  type: "Organization" | "WebPage" | "Event" | "Service" | "Place";
-  [key: string]: any;
-}) {
+export function generateStructuredData(params: StructuredDataParams) {
+  const { type, ...data } = params as Record<string, unknown> & { type: StructuredDataParams["type"] };
   switch (type) {
     case "Organization":
       return generateOrganizationSchema();
     case "WebPage":
-      return generateWebPageSchema(data as any);
+      return generateWebPageSchema(data as WebPageSchemaParams);
     case "Event":
-      return generateEventSchema(data as any);
+      return generateEventSchema(data as EventSchemaParams);
     case "Service":
-      return generateServiceSchema(data as any);
+      return generateServiceSchema(data as ServiceSchemaParams);
     case "Place":
       return generatePlaceSchema();
     default:
-      return generateWebPageSchema(data as any);
+      return generateWebPageSchema(data as WebPageSchemaParams);
   }
 }

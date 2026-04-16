@@ -22,8 +22,8 @@ export function Header() {
   // Initialize Zeffy buttons when script loads
   useEffect(() => {
     const initializeZeffy = () => {
-      if (typeof window !== "undefined" && (window as any).Zeffy) {
-        (window as any).Zeffy.bind?.();
+      if (typeof window !== "undefined" && window.Zeffy) {
+        window.Zeffy.bind?.();
       }
     };
 

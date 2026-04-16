@@ -2,6 +2,9 @@ import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-responses";
 import { strapiCreate, generateTransactionId } from "@/lib/strapi-submit";
 import { sendPujaConfirmation, sendAdminNotification } from "@/lib/email";
+import { parseFormDate, formatLongUsDate } from "@/lib/dates";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,9 +28,11 @@ export async function POST(request: NextRequest) {
     const transactionId = generateTransactionId();
     const sponsorName = fields.devoteeName || fields.sponsorName;
     const pujaType = fields.pujaId || "General Puja";
-    const date = fields.sponsorshipDate
-      ? new Date(fields.sponsorshipDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
-      : "To be confirmed";
+    const parsedRequestedDate = fields.sponsorshipDate ? parseFormDate(fields.sponsorshipDate) : null;
+    if (fields.sponsorshipDate && !parsedRequestedDate) {
+      return errorResponse("Invalid requested date", 400);
+    }
+    const date = parsedRequestedDate ? formatLongUsDate(parsedRequestedDate) : "To be confirmed";
 
     const result = await strapiCreate("puja-sponsorships", {
       pujaId: pujaType,
@@ -36,7 +41,7 @@ export async function POST(request: NextRequest) {
       sponsorEmail: fields.email,
       sponsorPhone: fields.phone || null,
       requestedDate: fields.sponsorshipDate
-        ? new Date(fields.sponsorshipDate).toISOString()
+        ? parsedRequestedDate!.toISOString()
         : new Date().toISOString(),
       location: fields.location || "At Temple",
       notes: [fields.specialInstructions, fields.notes].filter(Boolean).join("\n\n") || null,
@@ -44,8 +49,47 @@ export async function POST(request: NextRequest) {
       transactionId,
     });
 
-    if (!result.ok)
-      return errorResponse("Unable to submit request. Please try again or call (813) 269-7262.", 500);
+    if (!result.ok) {
+      console.error("[api/v1/forms/sponsorship] Strapi create failed:", {
+        transactionId,
+        status: result.status,
+        error: result.error,
+      });
+
+      await Promise.allSettled([
+        sendPujaConfirmation({
+          to: fields.email,
+          name: sponsorName,
+          pujaType,
+          date,
+          location: fields.location || "At Temple",
+          transactionId,
+        }),
+        sendAdminNotification({
+          formType: "Puja Sponsorship (fallback)",
+          submitterName: sponsorName,
+          submitterEmail: fields.email,
+          details: {
+            "Puja Type": pujaType,
+            "Requested Date": date,
+            "Phone": fields.phone || null,
+            "Location": fields.location || "At Temple",
+            "Notes": fields.specialInstructions || fields.notes || null,
+            "Strapi Error": result.error,
+          },
+          transactionId,
+        }),
+      ]);
+
+      return successResponse(
+        {
+          message:
+            "We received your request, but our system is temporarily having trouble saving it. A confirmation email has been sent. If you do not hear back soon, please call (813) 269-7262.",
+          transactionId,
+        },
+        202
+      );
+    }
 
     // Send emails (non-blocking — don't fail the request if email fails)
     await Promise.allSettled([

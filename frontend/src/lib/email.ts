@@ -9,8 +9,17 @@ function getConfig() {
   return {
     apiKey:      process.env.RESEND_API_KEY || "",
     fromAddress: process.env.SENDER_EMAIL_ADDRESS || "Vishnu Mandir Tampa <no-reply@vishnumandirtampa.com>",
-    adminEmail:  process.env.ADMIN_EMAIL_ADDRESS || "ram@fatdogspirits.com",
+    adminEmail:  process.env.ADMIN_EMAIL_ADDRESS || "vishnumandirtampa@gmail.com",
   };
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /** Core send function — calls Resend REST API */
@@ -74,9 +83,11 @@ function emailWrapper(content: string, title: string): string {
 
 function field(label: string, value: string | null | undefined) {
   if (!value) return "";
+  const safeLabel = escapeHtml(label);
+  const safeValue = escapeHtml(value);
   return `<tr>
-    <td style="padding:8px 0;color:#6b7280;font-size:14px;width:160px;vertical-align:top">${label}</td>
-    <td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${value}</td>
+    <td style="padding:8px 0;color:#6b7280;font-size:14px;width:160px;vertical-align:top">${safeLabel}</td>
+    <td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${safeValue}</td>
   </tr>`;
 }
 
@@ -85,8 +96,10 @@ function infoTable(rows: string) {
 }
 
 function ctaButton(text: string, url: string) {
+  const safeText = escapeHtml(text);
+  const safeUrl = escapeHtml(url);
   return `<div style="margin-top:28px;text-align:center">
-    <a href="${url}" style="background:#8B2E0F;color:#ffffff;padding:14px 32px;border-radius:50px;text-decoration:none;font-size:15px;font-weight:bold">${text}</a>
+    <a href="${safeUrl}" style="background:#8B2E0F;color:#ffffff;padding:14px 32px;border-radius:50px;text-decoration:none;font-size:15px;font-weight:bold">${safeText}</a>
   </div>`;
 }
 
@@ -96,8 +109,9 @@ export async function sendPujaConfirmation(opts: {
   to: string; name: string; pujaType: string; date: string;
   location: string; transactionId: string;
 }) {
+  const name = escapeHtml(opts.name);
   const content = `
-    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${opts.name}</strong>,</p>
+    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;line-height:1.7;margin:0 0 20px">
       Thank you for your puja sponsorship request. We have received your submission and our team will review it shortly.
       You will receive a confirmation email once your puja is confirmed.
@@ -119,6 +133,7 @@ export async function sendPujaStatusUpdate(opts: {
   to: string; name: string; pujaType: string; date: string;
   status: string; transactionId: string;
 }) {
+  const name = escapeHtml(opts.name);
   const statusMessages: Record<string, { label: string; message: string; color: string }> = {
     confirmed: { label: "Confirmed ✅", message: "Your puja sponsorship has been <strong>confirmed</strong>. Our priests are looking forward to performing this sacred service for you and your family.", color: "#16a34a" },
     completed: { label: "Completed 🙏", message: "Your sponsored puja has been <strong>completed</strong>. We pray that Lord Vishnu's blessings bring peace, prosperity, and joy to you and your family.", color: "#8B2E0F" },
@@ -127,7 +142,7 @@ export async function sendPujaStatusUpdate(opts: {
   const info = statusMessages[opts.status] ?? { label: opts.status, message: "Your puja request has been updated.", color: "#6b7280" };
 
   const content = `
-    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${opts.name}</strong>,</p>
+    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${name}</strong>,</p>
     <div style="padding:16px 20px;background:#f0fdf4;border-left:4px solid ${info.color};border-radius:4px;margin-bottom:20px">
       <p style="margin:0;color:${info.color};font-weight:bold;font-size:16px">Status: ${info.label}</p>
     </div>
@@ -147,8 +162,9 @@ export async function sendFacilityConfirmation(opts: {
   to: string; name: string; eventType: string; date: string;
   guests: number; transactionId: string;
 }) {
+  const name = escapeHtml(opts.name);
   const content = `
-    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${opts.name}</strong>,</p>
+    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;line-height:1.7;margin:0 0 20px">
       Thank you for your facility rental request. We have received your submission and will review availability.
       You will hear back from us within 2 business days.
@@ -170,6 +186,7 @@ export async function sendFacilityStatusUpdate(opts: {
   to: string; name: string; eventType: string; date: string;
   status: string; transactionId: string;
 }) {
+  const name = escapeHtml(opts.name);
   const statusMessages: Record<string, { label: string; message: string; color: string }> = {
     approved: { label: "Approved ✅", message: "Great news! Your facility request has been <strong>approved</strong>. Please contact us to finalize arrangements and discuss any requirements.", color: "#16a34a" },
     rejected: { label: "Unable to Accommodate", message: "Unfortunately, we are unable to accommodate your facility request for the requested date. Please contact us to discuss alternative dates.", color: "#dc2626" },
@@ -178,7 +195,7 @@ export async function sendFacilityStatusUpdate(opts: {
   const info = statusMessages[opts.status] ?? { label: opts.status, message: "Your facility request has been updated.", color: "#6b7280" };
 
   const content = `
-    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${opts.name}</strong>,</p>
+    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${name}</strong>,</p>
     <div style="padding:16px 20px;background:#f9fafb;border-left:4px solid ${info.color};border-radius:4px;margin-bottom:20px">
       <p style="margin:0;color:${info.color};font-weight:bold;font-size:16px">Status: ${info.label}</p>
     </div>
@@ -204,9 +221,10 @@ export async function sendFormConfirmation(opts: {
     EMAIL_SUBSCRIPTION: { label: "Email Subscription",         message: "Your newsletter subscription preferences have been updated. You'll receive temple updates and event announcements." },
   };
   const info = formLabels[opts.formType] ?? { label: "Request", message: "We have received your request and will follow up shortly." };
+  const name = escapeHtml(opts.name || "Devotee");
 
   const content = `
-    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${opts.name || "Devotee"}</strong>,</p>
+    <p style="color:#374151;line-height:1.7;margin:0 0 16px">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;line-height:1.7;margin:0 0 20px">${info.message}</p>
     ${infoTable(
       field("Request Type", info.label) +
@@ -226,20 +244,22 @@ export async function sendAdminNotification(opts: {
   details: Record<string, string | null | undefined>; transactionId: string;
 }) {
   const { adminEmail } = getConfig();
+  const submitterName = escapeHtml(opts.submitterName);
+  const submitterEmail = escapeHtml(opts.submitterEmail);
   const rows = Object.entries(opts.details)
     .filter(([, v]) => v)
     .map(([k, v]) => field(k, v ?? ""))
     .join("");
 
   const content = `
-    <p style="color:#374151;margin:0 0 16px">A new <strong>${opts.formType}</strong> was submitted on the Vishnu Mandir website.</p>
+    <p style="color:#374151;margin:0 0 16px">A new <strong>${escapeHtml(opts.formType)}</strong> was submitted on the Vishnu Mandir website.</p>
     ${infoTable(
-      field("Submitted By", opts.submitterName) +
-      field("Email", opts.submitterEmail) +
+      field("Submitted By", submitterName) +
+      field("Email", submitterEmail) +
       field("Transaction ID", opts.transactionId) +
       rows
     )}
-    ${ctaButton("View in Strapi Admin", "http://localhost:1337/admin")}`;
+    ${ctaButton("View in Strapi Admin", "https://cms.vishnumandirtampa.com/admin")}`;
 
   return sendEmail(adminEmail, `New ${opts.formType} Submission — ${opts.submitterName}`, emailWrapper(content, `New Submission: ${opts.formType}`));
 }

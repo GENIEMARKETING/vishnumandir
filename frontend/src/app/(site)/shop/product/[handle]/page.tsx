@@ -9,9 +9,9 @@ import { fetchProductsWithVendors } from "@/lib/medusa";
 import type { MedusaProduct, MedusaProductsResponse } from "@/types/medusa";
 
 interface ProductDetailPageProps {
-  params: {
+  params: Promise<{
     handle: string;
-  };
+  }>;
 }
 
 /**
@@ -66,7 +66,7 @@ async function fetchProductDirect(handle: string): Promise<
       };
     }
 
-    let product = (await res.json() as MedusaProductsResponse).products[0];
+    const product = (await res.json() as MedusaProductsResponse).products[0];
 
     if (!product) {
       console.error("[fetchProductDirect] No product found for handle:", handle);

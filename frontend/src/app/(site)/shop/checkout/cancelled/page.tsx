@@ -28,7 +28,7 @@ export default function CheckoutCancelledPage() {
         </h1>
 
         <p className="text-lg text-text-secondary mb-8">
-          Your payment was cancelled. Your cart is still saved, and you can return to checkout whenever you're ready.
+          Your payment was cancelled. Your cart is still saved, and you can return to checkout whenever you&apos;re ready.
         </p>
 
         {/* Info Box */}

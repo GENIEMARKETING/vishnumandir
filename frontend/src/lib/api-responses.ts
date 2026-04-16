@@ -6,16 +6,19 @@ import { ZodError } from "zod";
  * @see docs/architecture/api-contracts.md
  */
 export function successResponse(
-  options: { message: string; transactionId?: string; data?: any },
+  options: { message: string; transactionId?: string; data?: unknown },
   statusCode = 200
 ) {
+  const payload: Record<string, unknown> = {
+    status: "success",
+    message: options.message,
+  };
+
+  if (options.transactionId) payload.transactionId = options.transactionId;
+  if (options.data !== undefined) payload.data = options.data;
+
   return NextResponse.json(
-    {
-      status: "success",
-      message: options.message,
-      ...(options.transactionId && { transactionId: options.transactionId }),
-      ...(options.data && { data: options.data }),
-    },
+    payload,
     { status: statusCode }
   );
 }
@@ -29,12 +32,15 @@ export function errorResponse(
   statusCode = 400,
   errors?: Array<{ field: string; code: string; message: string }>
 ) {
+  const payload: Record<string, unknown> = {
+    status: "error",
+    message,
+  };
+
+  if (errors && errors.length > 0) payload.errors = errors;
+
   return NextResponse.json(
-    {
-      status: "error",
-      message,
-      ...(errors && errors.length > 0 && { errors }),
-    },
+    payload,
     { status: statusCode }
   );
 }

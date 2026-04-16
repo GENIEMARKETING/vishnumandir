@@ -83,31 +83,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate discount code and calculate discount if provided
-    let discountAmount = 0;
-    if (discountCode) {
-      try {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-        const discountResponse = await fetch(
-          `${backendUrl}/v1/discounts/${encodeURIComponent(discountCode)}`,
-          {
-            method: "GET",
-            headers: {
-              "x-api-key": process.env.API_KEY || "",
-            },
-          }
-        );
-
-        if (discountResponse.ok) {
-          const discountData = await discountResponse.json();
-          // Discount validation would happen at backend
-          // For now, assume backend validates and passes discount info
-        }
-      } catch (error) {
-        console.warn("Could not validate discount code:", error);
-        // Continue without discount if validation fails
-      }
-    }
+    // Note: discount validation/calculation happens on the backend order endpoint.
 
     // Create order via backend API
     let medusaOrderId: string;
@@ -152,7 +128,6 @@ export async function POST(req: NextRequest) {
             tax: totals.tax,
             shipping: totals.shipping,
             total: totals.total,
-            discount_total: discountAmount,
           },
           discount_code: discountCode,
         }),

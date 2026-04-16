@@ -7,9 +7,9 @@ import { fetchProductsWithVendors } from "@/lib/medusa";
 import type { MedusaProductsResponse } from "@/types/medusa";
 
 interface VendorPageProps {
-  params: {
+  params: Promise<{
     vendorSlug: string;
-  };
+  }>;
 }
 
 /**
@@ -118,7 +118,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
               Vendor Not Found
             </h2>
             <p className="text-text-secondary mb-6">
-              We couldn't find a vendor matching "{vendorSlug}".
+              We couldn&apos;t find a vendor matching &quot;{vendorSlug}&quot;.
             </p>
             <Link
               href="/shop"
