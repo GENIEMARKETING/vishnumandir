@@ -81,8 +81,8 @@ export default {
   async afterUpdate(event: any) {
     try {
       const { result, params } = event;
-      const newStatus  = result?.approvalStatus;
-      const prevStatus = params?.data?.approvalStatus;
+      const newStatus  = result?.status;
+      const prevStatus = params?.data?.status;
 
       if (!newStatus || newStatus === prevStatus) return;
       if (!result?.requesterEmail) return;

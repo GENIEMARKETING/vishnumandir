@@ -88,8 +88,8 @@ export default {
       const { result, params } = event;
 
       // Only trigger when approvalStatus changed
-      const newStatus    = result?.approvalStatus;
-      const prevStatus   = params?.data?.approvalStatus;
+      const newStatus    = result?.status;
+      const prevStatus   = params?.data?.status;
 
       if (!newStatus || newStatus === prevStatus) return;
       if (!result?.sponsorEmail) return;
