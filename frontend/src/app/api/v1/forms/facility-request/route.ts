@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
       numberOfGuests: Number(body.numberOfGuests),
       details: body.details || null,
       requirements: body.requirements || null,
+      // Some Strapi builds use `status`, others use `approvalStatus`. Send both for compatibility.
+      status: "pending",
       approvalStatus: "pending",
       transactionId,
     });

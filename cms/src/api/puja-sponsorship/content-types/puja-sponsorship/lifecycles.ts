@@ -33,7 +33,7 @@ export default {
   async afterCreate(event: any) {
     try {
       const { result } = event;
-      const adminEmail = process.env.ADMIN_EMAIL_ADDRESS || "ram@fatdogspirits.com";
+      const adminEmail = process.env.ADMIN_EMAIL_ADDRESS || "vishnumandirtampa@gmail.com";
 
       const date = result.requestedDate
         ? new Date(result.requestedDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })

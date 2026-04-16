@@ -21,8 +21,13 @@ import type {
  * This ensures env vars are available even if this module is imported early.
  */
 function getStrapiConfig() {
+  const rawApiUrl = process.env.CMS_API_URL || "http://localhost:1337/api";
+  const apiUrl = rawApiUrl.replace(/\/$/, "").endsWith("/api")
+    ? rawApiUrl.replace(/\/$/, "")
+    : `${rawApiUrl.replace(/\/$/, "")}/api`;
   return {
-    apiUrl: process.env.CMS_API_URL || "http://localhost:1337/api",
+    // Allow CMS_API_URL to be provided as either ".../api" or base host; normalize to ".../api".
+    apiUrl,
     apiToken: process.env.CMS_API_TOKEN || "",
   };
 }

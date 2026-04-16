@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
         : new Date().toISOString(),
       location: fields.location || "At Temple",
       notes: [fields.specialInstructions, fields.notes].filter(Boolean).join("\n\n") || null,
+      // Some Strapi builds use `status`, others use `approvalStatus`. Send both for compatibility.
+      status: "pending",
       approvalStatus: "pending",
       transactionId,
     });

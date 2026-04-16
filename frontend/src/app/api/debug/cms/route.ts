@@ -151,6 +151,7 @@ export async function GET() {
     'newsletters',
     'priests',
     'puja-services',
+    'board-members',
     'pages',
   ];
 
