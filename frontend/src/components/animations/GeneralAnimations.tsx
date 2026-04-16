@@ -9,27 +9,46 @@ export function GeneralAnimations() {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
+      const els = (selector: string) =>
+        gsap.utils.toArray<HTMLElement>(selector);
 
       // ── PRE-SET ALL INITIAL STATES (eliminates jerk) ─────────────────
-      gsap.set("[data-gsap='page-hero-tag']",   { y: -12, opacity: 0 });
-      gsap.set("[data-gsap='page-hero-title']",  { y: 24, opacity: 0 });
-      gsap.set("[data-gsap='page-hero-sub']",    { y: 16, opacity: 0 });
-      gsap.set("[data-gsap='gold-line']",        { width: 0, opacity: 0 });
-      gsap.set("[data-gsap='section-heading']",  { y: 22, opacity: 0 });
-      gsap.set("[data-gsap='card']",             { y: 28, opacity: 0 });
-      gsap.set("[data-gsap='fade-up']",          { y: 22, opacity: 0 });
-      gsap.set("[data-gsap='fade-left']",        { x: -28, opacity: 0 });
-      gsap.set("[data-gsap='fade-right']",       { x: 28, opacity: 0 });
-      gsap.set("[data-gsap='cta-block']",        { scale: 0.97, y: 16, opacity: 0 });
+      // Use element arrays (not selector strings) to avoid "GSAP target not found" warnings on pages
+      // that don't include every possible data-gsap marker.
+      gsap.set(els("[data-gsap='page-hero-tag']"), { y: -12, opacity: 0 });
+      gsap.set(els("[data-gsap='page-hero-title']"), { y: 24, opacity: 0 });
+      gsap.set(els("[data-gsap='page-hero-sub']"), { y: 16, opacity: 0 });
+      gsap.set(els("[data-gsap='gold-line']"), { width: 0, opacity: 0 });
+      gsap.set(els("[data-gsap='section-heading']"), { y: 22, opacity: 0 });
+      gsap.set(els("[data-gsap='card']"), { y: 28, opacity: 0 });
+      gsap.set(els("[data-gsap='fade-up']"), { y: 22, opacity: 0 });
+      gsap.set(els("[data-gsap='fade-left']"), { x: -28, opacity: 0 });
+      gsap.set(els("[data-gsap='fade-right']"), { x: 28, opacity: 0 });
+      gsap.set(els("[data-gsap='cta-block']"), { scale: 0.97, y: 16, opacity: 0 });
 
       // ── PAGE HERO ────────────────────────────────────────────────────
-      const tl = gsap.timeline({ defaults: { ease: "power2.out" }, delay: 0.1 });
-      tl.to("[data-gsap='page-hero-tag']",   { opacity: 1, y: 0, duration: 0.45 })
-        .to("[data-gsap='page-hero-title']",  { opacity: 1, y: 0, duration: 0.5 },  "-=0.2")
-        .to("[data-gsap='page-hero-sub']",    { opacity: 1, y: 0, duration: 0.4 },  "-=0.25");
+      const heroTag = els("[data-gsap='page-hero-tag']");
+      const heroTitle = els("[data-gsap='page-hero-title']");
+      const heroSub = els("[data-gsap='page-hero-sub']");
+
+      if (heroTag.length || heroTitle.length || heroSub.length) {
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          delay: 0.1,
+        });
+        if (heroTag.length) {
+          tl.to(heroTag, { opacity: 1, y: 0, duration: 0.45 });
+        }
+        if (heroTitle.length) {
+          tl.to(heroTitle, { opacity: 1, y: 0, duration: 0.5 }, "-=0.2");
+        }
+        if (heroSub.length) {
+          tl.to(heroSub, { opacity: 1, y: 0, duration: 0.4 }, "-=0.25");
+        }
+      }
 
       // ── GOLD LINES ───────────────────────────────────────────────────
-      gsap.utils.toArray<HTMLElement>("[data-gsap='gold-line']").forEach((el) => {
+      els("[data-gsap='gold-line']").forEach((el) => {
         gsap.to(el, {
           width: el.dataset.width ?? "48px", opacity: 1,
           duration: 0.55, ease: "power2.out",
@@ -38,7 +57,7 @@ export function GeneralAnimations() {
       });
 
       // ── SECTION HEADINGS ─────────────────────────────────────────────
-      gsap.utils.toArray<HTMLElement>("[data-gsap='section-heading']").forEach((el) => {
+      els("[data-gsap='section-heading']").forEach((el) => {
         gsap.to(el, {
           opacity: 1, y: 0, duration: 0.5, ease: "power2.out",
           scrollTrigger: { trigger: el, start: "top 90%" },
@@ -46,7 +65,7 @@ export function GeneralAnimations() {
       });
 
       // ── CARDS ────────────────────────────────────────────────────────
-      gsap.utils.toArray<HTMLElement>("[data-gsap='card']").forEach((el, i) => {
+      els("[data-gsap='card']").forEach((el, i) => {
         gsap.to(el, {
           opacity: 1, y: 0, duration: 0.45, delay: i * 0.07, ease: "power2.out",
           scrollTrigger: { trigger: el, start: "top 92%" },
@@ -54,19 +73,19 @@ export function GeneralAnimations() {
       });
 
       // ── FADE VARIANTS ────────────────────────────────────────────────
-      gsap.utils.toArray<HTMLElement>("[data-gsap='fade-up']").forEach((el) => {
+      els("[data-gsap='fade-up']").forEach((el) => {
         gsap.to(el, {
           opacity: 1, y: 0, duration: 0.5, ease: "power2.out",
           scrollTrigger: { trigger: el, start: "top 90%" },
         });
       });
-      gsap.utils.toArray<HTMLElement>("[data-gsap='fade-left']").forEach((el) => {
+      els("[data-gsap='fade-left']").forEach((el) => {
         gsap.to(el, {
           opacity: 1, x: 0, duration: 0.55, ease: "power2.out",
           scrollTrigger: { trigger: el, start: "top 88%" },
         });
       });
-      gsap.utils.toArray<HTMLElement>("[data-gsap='fade-right']").forEach((el) => {
+      els("[data-gsap='fade-right']").forEach((el) => {
         gsap.to(el, {
           opacity: 1, x: 0, duration: 0.55, ease: "power2.out",
           scrollTrigger: { trigger: el, start: "top 88%" },
@@ -74,7 +93,7 @@ export function GeneralAnimations() {
       });
 
       // ── CTA BLOCKS ───────────────────────────────────────────────────
-      gsap.utils.toArray<HTMLElement>("[data-gsap='cta-block']").forEach((el) => {
+      els("[data-gsap='cta-block']").forEach((el) => {
         gsap.to(el, {
           opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "back.out(1.2)",
           scrollTrigger: { trigger: el, start: "top 90%" },
