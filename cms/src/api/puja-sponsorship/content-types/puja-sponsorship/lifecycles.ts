@@ -30,6 +30,59 @@ async function sendResendEmail(to: string, subject: string, html: string) {
 }
 
 export default {
+  async afterCreate(event: any) {
+    try {
+      const { result } = event;
+      const adminEmail = process.env.ADMIN_EMAIL_ADDRESS || "ram@fatdogspirits.com";
+
+      const date = result.requestedDate
+        ? new Date(result.requestedDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+        : "To be confirmed";
+
+      const html = `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f5f5f0;font-family:Georgia,serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f0;padding:40px 20px">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+      <tr><td style="background:#8B2E0F;padding:32px 40px;text-align:center">
+        <p style="margin:0;color:#C5A059;font-style:italic;font-size:14px;letter-spacing:2px">🕉 OM NAMO NARAYANAYA 🕉</p>
+        <h1 style="margin:8px 0 0;color:#fff;font-size:26px;font-weight:normal">Vishnu Mandir Tampa</h1>
+        <p style="margin:4px 0 0;color:#e8c99a;font-size:13px">New Puja Sponsorship Received</p>
+      </td></tr>
+      <tr><td style="background:#C5A059;height:3px"></td></tr>
+      <tr><td style="padding:40px">
+        <h2 style="color:#8B2E0F;font-size:22px;margin:0 0 20px;font-weight:normal">🙏 New Puja Sponsorship</h2>
+        <p style="color:#374151;line-height:1.7;margin:0 0 20px">A new puja sponsorship has been submitted and is awaiting your review.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #f0ece5;padding-top:20px;margin-top:4px">
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px;width:160px">Sponsor Name</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${result.sponsorName || ""}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Email</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${result.sponsorEmail || ""}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Phone</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${result.sponsorPhone || "—"}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Puja Service</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${result.pujaServiceName || result.pujaId || "—"}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Requested Date</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${date}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Amount</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${result.amount ? "$" + result.amount : "—"}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Occasion</td><td style="padding:8px 0;color:#1f2937;font-size:14px">${result.occasion || "—"}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Special Requests</td><td style="padding:8px 0;color:#1f2937;font-size:14px">${result.specialRequests || "—"}</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-size:14px">Transaction ID</td><td style="padding:8px 0;color:#1f2937;font-size:14px;font-weight:bold">${result.transactionId || ""}</td></tr>
+        </table>
+        <div style="margin-top:28px;text-align:center">
+          <a href="https://cms.vishnumandirtampa.com/admin" style="display:inline-block;background:#8B2E0F;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px">Review in CMS →</a>
+        </div>
+      </td></tr>
+      <tr><td style="background:#fdfbf7;border-top:1px solid #e8e0d5;padding:24px 40px;text-align:center">
+        <p style="margin:0;color:#6b7280;font-size:13px">Vishnu Mandir, Tampa &bull; (813) 269-7262</p>
+        <p style="margin:8px 0 0;color:#9ca3af;font-size:12px">This is an automated admin notification.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+
+      await sendResendEmail(adminEmail, `New Puja Sponsorship: ${result.pujaServiceName || result.pujaId || "Request"} — ${result.sponsorName || ""}`, html);
+    } catch (err) {
+      strapi.log.error("[puja-sponsorship lifecycle] afterCreate admin notify error:", err);
+    }
+  },
+
   async afterUpdate(event: any) {
     try {
       const { result, params } = event;
