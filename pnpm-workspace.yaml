@@ -3,3 +3,16 @@ packages:
   - 'backend'
   - 'cms'
   - 'commerce'
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - sharp
+  - better-sqlite3
+  - esbuild
+  - '@swc/core'
+  - msgpackr-extract
+  - protobufjs
+  - core-js-pure
+  - '@medusajs/telemetry'
+  - unrs-resolver
