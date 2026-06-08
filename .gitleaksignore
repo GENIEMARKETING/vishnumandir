@@ -1,0 +1,27 @@
+# Known, pre-existing committed secrets — ACCEPTED *PENDING ROTATION* (Vinny rotates last).
+# Each line is a gitleaks fingerprint (commit:file:rule:line) — this file IS the rotation checklist.
+# As each secret is rotated + purged, delete its line so gitleaks catches regressions again.
+# Tracked in sessions/HANDOFFS.md → 'Rotate leaked secrets'.
+161c8fd3ba5ecd7fe33cd527471e00a79aaea649:scripts/run-migrations.sh:postgres-url-with-password:18
+337de154bd46d3b88021102b2bcdb7cee2f68b64:docs/deployment/AMPLIFY_ENV_VARS_SETUP.md:postgres-url-with-password:19
+385bad9ca975ad77bff0e193117425c37ecb1a1d:.cursorrules:postgres-url-with-password:933
+385bad9ca975ad77bff0e193117425c37ecb1a1d:.cursorrules:postgres-url-with-password:935
+385bad9ca975ad77bff0e193117425c37ecb1a1d:docs/development/project-readme.md:postgres-url-with-password:103
+385bad9ca975ad77bff0e193117425c37ecb1a1d:docs/development/project-scaffolding.md:postgres-url-with-password:208
+4461b95bda53e7f9462fd5dfa65f0d77f2bfb46b:docs/deployment/CMS_FIX_IMPLEMENTATION_CHECKLIST.md:curl-auth-header:64
+4461b95bda53e7f9462fd5dfa65f0d77f2bfb46b:docs/deployment/FIX_CMS_PRODUCTION_DISPLAY.md:curl-auth-header:110
+4461b95bda53e7f9462fd5dfa65f0d77f2bfb46b:docs/deployment/FIX_CMS_PRODUCTION_DISPLAY.md:curl-auth-header:305
+4da2e5fd16ec5f108cf6933ead0105820c794a6c:docs/deployment/AMPLIFY_ENV_VARS.md:curl-auth-header:122
+4da2e5fd16ec5f108cf6933ead0105820c794a6c:docs/deployment/STRAPI_PERMISSIONS_VERIFICATION.md:curl-auth-header:153
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/AMPLIFY_ENV_VARS.md:postgres-url-with-password:14
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/AMPLIFY_SETUP.md:postgres-url-with-password:71
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/DEPLOYMENT_STATUS.md:postgres-url-with-password:223
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/DEPLOYMENT_STATUS.md:postgres-url-with-password:95
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/aws-infrastructure.md:postgres-url-with-password:174
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/aws-infrastructure.md:postgres-url-with-password:247
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/aws-infrastructure.md:postgres-url-with-password:309
+79e4afc41f9ebce9a095e17669903c2bb5c32880:docs/deployment/aws-infrastructure.md:postgres-url-with-password:71
+ac017d5ccdc5645d2018ac5cd2b4ae521a76f146:docs/deployment/STRAPI_FORM_SUBMISSIONS_SETUP.md:curl-auth-header:155
+ac017d5ccdc5645d2018ac5cd2b4ae521a76f146:scripts/backend-env-template.txt:postgres-url-with-password:6
+f7c7bfa4df8e56da77e10b3ca29ccdc0ae059a38:docs/deployment/CACHE_INVALIDATION.md:curl-auth-header:190
+f7c7bfa4df8e56da77e10b3ca29ccdc0ae059a38:docs/deployment/CMS_CONTENT_TROUBLESHOOTING.md:curl-auth-header:189
